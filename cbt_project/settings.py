@@ -175,7 +175,7 @@ LOGOUT_REDIRECT_URL = "/login/"
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Mengizinkan POST dari tunnel (localtunnel) agar tidak error 403 CSRF
-CSRF_TRUSTED_ORIGINS = ['https://*.loca.lt']
+CSRF_TRUSTED_ORIGINS = ['https://*.loca.lt', 'https://*.pythonanywhere.com', 'https://cities9.pythonanywhere.com']
 
 # Wajib untuk iPhone/Safari karena mendeteksi HTTPS dari Proxy (Tunneling)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
