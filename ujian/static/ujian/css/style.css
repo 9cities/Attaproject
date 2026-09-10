@@ -1,0 +1,198 @@
+/* ============================
+   DASHBOARD CBT TRY OUT
+============================ */
+
+
+.dashboard{
+
+    display:flex;
+
+    width:95%;
+
+    max-width:1100px;
+
+    margin:30px auto;
+
+    gap:20px;
+
+}
+
+.hasil-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--r);
+    border: 1.5px solid var(--border);
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+}
+
+.hasil-table {
+    width: 100%;
+    border-collapse: separate; /* Required for sticky borders */
+    border-spacing: 0;
+    font-size: 13px;
+    min-width: max-content;
+    font-family: 'Nunito', sans-serif;
+}
+
+.hasil-table th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--pink-pale);
+    color: var(--pink-dark);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 12px 14px;
+    text-align: center;
+    border-bottom: 1.5px solid var(--border);
+    border-right: 1.5px solid var(--border-soft);
+    white-space: nowrap;
+}
+
+
+/* SIDEBAR */
+
+.sidebar{
+
+    width:220px;
+
+    background:#ffffff;
+
+    padding:20px;
+
+    border-radius:10px;
+
+    box-shadow:0 0 15px rgba(0,0,0,.08);
+
+}
+
+
+
+.menu,
+.sidebar button{
+
+    display:block;
+
+    width:100%;
+
+    padding:15px;
+
+    margin-bottom:12px;
+
+    text-align:center;
+
+    text-decoration:none;
+
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    font-size:17px;
+
+}
+
+
+/* LOGIN */
+
+.login{
+
+    background:#fff2cc;
+
+    color:#c00000;
+
+}
+
+
+/* ADMIN */
+
+.admin{
+
+    background:#d9ead3;
+
+    color:#38761d;
+
+}
+
+
+
+.sidebar button{
+
+    background:#5b9bd5;
+
+    color:white;
+
+}
+
+
+
+/* CONTENT */
+
+.content{
+
+    flex:1;
+
+}
+
+
+
+.grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:20px;
+
+}
+
+
+
+.box{
+
+    background:#5b9bd5;
+
+    color:white;
+
+    padding:30px;
+
+    text-align:center;
+
+    border-radius:10px;
+
+    font-size:20px;
+
+    cursor:pointer;
+
+}
+
+
+
+.box:hover{
+
+    background:#2f75b5;
+
+}
+
+
+
+/* WELCOME */
+
+.welcome{
+
+    margin-top:25px;
+
+    background:white;
+
+    padding:25px;
+
+    border-radius:10px;
+
+    text-align:center;
+
+    box-shadow:0 0 15px rgba(0,0,0,.08);
+
+}

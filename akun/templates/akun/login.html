@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Login Peserta</title>
+
+<link rel="stylesheet" href="{% static 'akun/css/style.css' %}">
+
+</head>
+<body>
+
+<div class="background"></div>
+
+<div class="container">
+
+    <div class="card">
+
+        <div class="brand">
+            <div class="icon">🧠</div>
+            <div>
+                <h1>ATTA PROJECT</h1>
+                <p id="login-subtitle">Masuk sebagai peserta untuk memulai ujian.</p>
+            </div>
+        </div>
+
+        <h3 id="login-title">Login Peserta</h3>
+
+        <script>
+            // Ubah teks redaksional jika masuk melalui tombol admin
+            if (new URLSearchParams(window.location.search).get('role') === 'admin') {
+                document.title = "Login Admin";
+                document.getElementById("login-title").innerText = "Login Administrator";
+                document.getElementById("login-subtitle").innerText = "Masuk sebagai Admin untuk mengelola sistem.";
+                // Sembunyikan catatan admin
+                document.addEventListener('DOMContentLoaded', function() {
+                    var adminNote = document.querySelector('.admin-note');
+                    if(adminNote) adminNote.style.display = 'none';
+                });
+            }
+        </script>
+
+        {% if error %}
+            <div class="error">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="post" autocomplete="off">
+
+            {% csrf_token %}
+
+            <input
+                type="text"
+                name="username"
+                placeholder="Username"
+                autocomplete="new-password"
+                required
+            >
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                autocomplete="new-password"
+                required
+            >
+
+            <button type="submit">Masuk</button>
+
+        </form>
+
+        <script>
+            // Paksa kosongkan form pada saat halaman dimuat (untuk mencegah autofill nakal)
+            window.addEventListener('pageshow', function() {
+                setTimeout(function() {
+                    document.querySelector('input[name="username"]').value = '';
+                    document.querySelector('input[name="password"]').value = '';
+                }, 50);
+            });
+        </script>
+
+        <div class="helper-row" style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap;">
+            <a href="{% url 'register' %}">Daftar Akun</a>
+            <a href="{% url 'user_change_password' %}">Ganti Password</a>
+            <a href="{% url 'password_reset_question' %}">Lupa Password?</a>
+        </div>
+
+        <div class="admin-note">
+            <p>Untuk login admin, silakan gunakan tombol <strong>ADMIN</strong> di halaman utama atau buka <code>/admin/</code>.</p>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

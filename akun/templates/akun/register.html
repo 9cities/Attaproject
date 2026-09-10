@@ -1,0 +1,69 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Peserta</title>
+    <link rel="stylesheet" href="{% static 'akun/css/style.css' %}">
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h1>ATTA PROJECT</h1>
+        <h3>Daftar Peserta Baru</h3>
+
+        {% if form.errors %}
+            <div class="error" style="display:none;">
+                <ul id="error-list">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    var errorList = document.getElementById("error-list");
+                    var errors = [];
+                    if (errorList) {
+                        var listItems = errorList.getElementsByTagName("li");
+                        for (var i = 0; i < listItems.length; i++) {
+                            errors.push(listItems[i].innerText);
+                        }
+                        if (errors.length > 0) {
+                            alert("⚠️ Gagal Mendaftar!\n\n" + errors.join("\n"));
+                        }
+                    }
+                });
+            </script>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <label for="security_question">Buat pertanyaan keamanan (ketik sendiri)</label>
+            <input type="text" name="security_question" placeholder="Contoh: Siapa nama hewan peliharaan pertama Anda?" required>
+            <input type="text" name="security_answer" placeholder="Jawaban pertanyaan keamanan" required>
+            <input type="password" name="password1" placeholder="Password" required>
+            <input type="password" name="password2" placeholder="Konfirmasi Password" required>
+
+            <button type="submit">Daftar</button>
+        </form>
+
+        <p>
+            Sudah punya akun?
+            <a href="{% url 'login' %}">Login Disini</a>
+        </p>
+    </div>
+</div>
+
+</body>
+</html>

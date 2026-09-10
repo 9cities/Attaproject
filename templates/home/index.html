@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="dashboard">
+
+    <aside class="sidebar">
+
+        <!-- ===== MENU PESERTA ===== -->
+        <div class="sidebar-section-label">👨‍🎓 Peserta</div>
+
+        {% if not user.is_authenticated %}
+        <a href="{% url 'login' %}" class="menu menu-login">
+            👤 Login Peserta
+        </a>
+        {% else %}
+        <a href="{% url 'selesai_ujian' %}" class="menu">
+            📊 Hasil Ujian
+        </a>
+        <a href="{% url 'user_change_password' %}" class="menu">
+            🔑 Ganti Password
+        </a>
+        <a href="{% url 'logout' %}" class="menu menu-logout">
+            🚪 Keluar
+        </a>
+        {% endif %}
+
+        <!-- ===== MENU ADMIN ===== -->
+        <div class="sidebar-section-label sidebar-section-admin">🛠️ Admin</div>
+
+        {% if user.is_staff or user.is_superuser %}
+        <a href="{% url 'import_soal' %}" class="menu menu-admin">
+            📥 Upload Soal Excel
+        </a>
+        <a href="{% url 'review_jawaban' %}" class="menu menu-admin">
+            📖 Review Jawaban
+        </a>
+        <a href="{% url 'admin_statistik' %}" class="menu menu-admin">
+            📈 Statistik
+        </a>
+        <a href="{% url 'admin_change_credentials' %}" class="menu menu-admin">
+            🔐 Ubah Akun Admin
+        </a>
+        <a href="{% url 'admin_statistik' %}" class="menu menu-admin">
+            ⚙️ Panel Admin
+        </a>
+        {% else %}
+        <a href="{% url 'import_soal' %}" class="menu menu-admin" onclick="return showAdminLockModal(event)">
+            📥 Upload Soal Excel 🔒
+        </a>
+        <a href="{% url 'review_jawaban' %}" class="menu menu-admin" onclick="return showAdminLockModal(event)">
+            📖 Review Jawaban 🔒
+        </a>
+        <a href="{% url 'admin_statistik' %}" class="menu menu-admin" onclick="return showAdminLockModal(event)">
+            📈 Statistik 🔒
+        </a>
+        <a href="{% url 'admin_change_credentials' %}" class="menu menu-admin" onclick="return showAdminLockModal(event)">
+            🔐 Ubah Akun Admin 🔒
+        </a>
+        <a href="{% url 'admin_statistik' %}" class="menu menu-admin" onclick="return showAdminLockModal(event)">
+            ⚙️ Panel Admin 🔒
+        </a>
+        {% endif %}
+
+    </aside>
+
+
+    <main class="content">
+
+        <div class="grid">
+
+            <a href="{% url 'materi_list' %}" class="box" style="background: linear-gradient(135deg, #fff0f5 0%, #ffe4ee 100%); border: 1.5px solid var(--border); box-shadow: 0 4px 15px rgba(255, 77, 143, 0.15);">
+                🎬 <b>Materi Pembelajaran (Animasi &amp; Suara)</b>
+            </a>
+
+            <a href="{% url 'daftar_soal_kategori' 'EASY' %}" class="box">
+                📝 Try Out Easy
+            </a>
+
+            <a href="{% url 'daftar_soal_kategori' 'MEDIUM' %}" class="box">
+                📝 Try Out Medium
+            </a>
+
+            <a href="{% url 'daftar_soal_kategori' 'HARD' %}" class="box">
+                📝 Try Out Hard
+            </a>
+
+            <a href="{% url 'daftar_soal_kategori' 'KD1' %}" class="box">
+                📚 Konsep Dasar 1
+            </a>
+
+            <a href="{% url 'daftar_soal_kategori' 'KD2' %}" class="box">
+                📚 Konsep Dasar 2
+            </a>
+
+        </div>
+
+
+        <div class="welcome">
+
+            <h2>🎓 Selamat Datang di ATTA PROJECT</h2>
+
+            <hr>
+
+            {% if user.is_staff or user.is_superuser %}
+            <p>👨‍🔧 Admin :
+                <b>{{ user.username }}</b>
+            </p>
+            <p>📝 Status : <b>Mengelola Sistem (Admin)</b></p>
+            {% else %}
+            <p>👤 Peserta :
+                <b>{% if user.is_authenticated %}{{ user.username }}{% else %}Tamu{% endif %}</b>
+            </p>
+            <p>📝 Status : <b>Siap Mengikuti Ujian</b></p>
+            {% endif %}
+
+            <p>📚 Jumlah Soal : <b>{{ jumlah_soal }}</b></p>
+
+            <br>
+
+            <p>Silakan pilih menu untuk memulai pembelajaran.</p>
+
+        </div>
+
+    </main>
+
+</div>
+
+{% endblock %}

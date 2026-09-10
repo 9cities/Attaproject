@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container" style="max-width: 850px;">
+
+    <div class="card" style="padding: 28px; text-align: center;">
+
+        <div style="font-size: 13px; font-weight: 800; color: var(--pink-dark); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">
+            ✨ Demo Fitur Interactive Web Audio-Visual
+        </div>
+
+        <h1 style="font-size: 22px; font-weight: 900; color: var(--text); margin-bottom: 12px;">
+            🎬 Animasi HTML5 &amp; Narasi Suara Otomatis
+        </h1>
+
+        <p style="font-size: 14px; color: var(--text2); max-width: 600px; margin: 0 auto 24px auto; line-height: 1.6;">
+            Contoh widget animasi bergerak yang dipadukan dengan pengucap suara narasi (*Web Speech API*) langsung di dalam aplikasi CBT Anda.
+        </p>
+
+        <!-- CANVAS / ANIMATION STAGE -->
+        <div style="background: linear-gradient(135deg, #1e1e2f 0%, #0f0c20 100%); border-radius: 16px; padding: 30px; margin-bottom: 24px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: 2px solid rgba(255, 77, 143, 0.3);">
+            
+            <div id="statusBadge" style="position: absolute; top: 16px; right: 20px; background: rgba(255, 77, 143, 0.2); border: 1px solid var(--pink-main); color: #ff85b3; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 800;">
+                ⏸️ Status: Standby
+            </div>
+
+            <!-- SVG LOGIC DIAGRAM -->
+            <svg width="100%" height="220" viewBox="0 0 600 220" style="overflow: visible;">
+                <defs>
+                    <linearGradient id="pinkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#FF4D8F" />
+                        <stop offset="100%" stop-color="#FF85B3" />
+                    </linearGradient>
+
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="6" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
+
+                <!-- Box 1: Premis 1 (p -> q) -->
+                <g id="boxP1" transform="translate(40, 20)">
+                    <rect width="160" height="70" rx="12" fill="#2d2b45" stroke="#48446e" stroke-width="2" id="rectP1" />
+                    <text x="80" y="32" text-anchor="middle" fill="#aaa" font-size="11" font-weight="bold">PREMIS 1 (Mayor)</text>
+                    <text x="80" y="54" text-anchor="middle" fill="#fff" font-size="16" font-weight="900">p ➔ q</text>
+                </g>
+
+                <!-- Arrow 1 -->
+                <path id="path1" d="M 200 55 L 260 55" stroke="#48446e" stroke-width="3" fill="none" stroke-dasharray="6,6" />
+
+                <!-- Box 2: Premis 2 (p) -->
+                <g id="boxP2" transform="translate(260, 20)">
+                    <rect width="160" height="70" rx="12" fill="#2d2b45" stroke="#48446e" stroke-width="2" id="rectP2" />
+                    <text x="80" y="32" text-anchor="middle" fill="#aaa" font-size="11" font-weight="bold">PREMIS 2 (Fakta)</text>
+                    <text x="80" y="54" text-anchor="middle" fill="#fff" font-size="16" font-weight="900">p (Terjadi)</text>
+                </g>
+
+                <!-- Arrow 2 Down to Conclusion -->
+                <path id="path2" d="M 340 90 L 340 135 L 480 135 L 480 145" stroke="#48446e" stroke-width="3" fill="none" stroke-dasharray="6,6" />
+
+                <!-- Box 3: Kesimpulan (q) -->
+                <g id="boxQ" transform="translate(200, 130)">
+                    <rect width="280" height="75" rx="14" fill="#2d2b45" stroke="#48446e" stroke-width="2" id="rectQ" />
+                    <text x="140" y="32" text-anchor="middle" fill="#aaa" font-size="11" font-weight="bold">KESIMPULAN LOGIS</text>
+                    <text x="140" y="58" text-anchor="middle" fill="#FF85B3" font-size="18" font-weight="900" id="textQ">∴ q (PASTI BENAR)</text>
+                </g>
+            </svg>
+
+            <!-- CAPTION DISPLAY -->
+            <div id="subCaption" style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 12px 18px; margin-top: 10px; color: #e2e8f0; font-size: 14px; font-weight: 700; min-height: 48px; display: flex; align-items: center; justify-content: center;">
+                Klik tombol "▶️ Putar Animasi &amp; Suara" untuk memulai demonstrasi interaktif.
+            </div>
+
+        </div>
+
+        <!-- CONTROLS -->
+        <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+            <button type="button" id="btnPlay" onclick="playAnimationAndAudio()" style="padding: 12px 28px; font-size: 14px; font-weight: 900; background: var(--grad-btn); border-radius: 10px;">
+                ▶️ Putar Animasi &amp; Suara Narasi
+            </button>
+            <button type="button" onclick="stopAnimationAndAudio()" style="padding: 12px 20px; font-size: 14px; font-weight: 800; background: var(--pink-pale); color: var(--pink-dark); border: 1.5px solid var(--border); box-shadow: none;">
+                ⏹️ Hentikan
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+var isPlaying = false;
+var timer = null;
+
+function highlightBox(rectId, strokeColor, fillColor, glowEffect = false) {
+    var rect = document.getElementById(rectId);
+    if (rect) {
+        rect.style.transition = 'all 0.5s ease';
+        rect.setAttribute('stroke', strokeColor);
+        rect.setAttribute('fill', fillColor);
+        if (glowEffect) {
+            rect.setAttribute('filter', 'url(#glow)');
+        } else {
+            rect.removeAttribute('filter');
+        }
+    }
+}
+
+function resetStage() {
+    highlightBox('rectP1', '#48446e', '#2d2b45', false);
+    highlightBox('rectP2', '#48446e', '#2d2b45', false);
+    highlightBox('rectQ', '#48446e', '#2d2b45', false);
+    document.getElementById('statusBadge').innerHTML = '⏸️ Status: Standby';
+    document.getElementById('subCaption').innerText = 'Klik tombol "▶️ Putar Animasi & Suara" untuk memulai demonstrasi interaktif.';
+}
+
+function speakSentence(text, callback) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        var msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'id-ID';
+        msg.rate = 0.95;
+        msg.pitch = 1.0;
+        
+        msg.onend = function() {
+            if (callback) callback();
+        };
+        
+        window.speechSynthesis.speak(msg);
+    } else {
+        if (callback) setTimeout(callback, 3000);
+    }
+}
+
+function playAnimationAndAudio() {
+    stopAnimationAndAudio();
+    isPlaying = true;
+    
+    document.getElementById('statusBadge').innerHTML = '🔊 Status: Memutar...';
+    
+    // Langkah 1: Penjelasan Premis 1
+    highlightBox('rectP1', '#FF4D8F', '#3f1f3a', true);
+    document.getElementById('subCaption').innerHTML = '🗣️ <em>"Premis 1: Jika p terjadi, maka q pasti terjadi (p ➔ q)."</em>';
+    
+    speakSentence("Mari kita pelajari Modus Ponens. Premis 1: Jika P terjadi, maka Q pasti terjadi.", function() {
+        if (!isPlaying) return;
+        
+        // Langkah 2: Penjelasan Premis 2
+        highlightBox('rectP1', '#48446e', '#2d2b45', false);
+        highlightBox('rectP2', '#FF4D8F', '#3f1f3a', true);
+        document.getElementById('subCaption').innerHTML = '🗣️ <em>"Premis 2: Fakta di lapangan menunjukkan p terjadi."</em>';
+        
+        speakSentence("Premis 2: Fakta di lapangan menunjukkan bahwa P benar-benar terjadi.", function() {
+            if (!isPlaying) return;
+            
+            // Langkah 3: Penjelasan Kesimpulan
+            highlightBox('rectP2', '#48446e', '#2d2b45', false);
+            highlightBox('rectQ', '#FF4D8F', '#54153b', true);
+            document.getElementById('subCaption').innerHTML = '🗣️ <em>"Maka Kesimpulannya: q PASTI TERJADI!"</em>';
+            
+            speakSentence("Maka kesimpulan logisnya adalah: Q pasti terjadi!", function() {
+                if (!isPlaying) return;
+                document.getElementById('statusBadge').innerHTML = '✅ Selesai';
+                document.getElementById('subCaption').innerHTML = '🎉 Demo Selesai! Animasi visual dan suara beres diputar.';
+            });
+        });
+    });
+}
+
+function stopAnimationAndAudio() {
+    isPlaying = false;
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+    resetStage();
+}
+</script>
+
+{% endblock %}

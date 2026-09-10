@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container" style="max-width: 1050px;">
+
+    <!-- HEADER BANNER -->
+    <div class="card" style="padding: 32px; background: linear-gradient(135deg, #fff0f5 0%, #ffe4ee 100%); border: 2px solid var(--border); margin-bottom: 24px; border-radius: var(--r2); position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -20px; right: -20px; font-size: 120px; opacity: 0.12; pointer-events: none;">🎬</div>
+        
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <div style="background: var(--pink-pale); color: var(--pink-dark); font-size: 12px; font-weight: 800; padding: 4px 14px; border-radius: 20px; display: inline-block; margin-bottom: 8px; border: 1px solid var(--border);">
+                    ✨ MODUL INTERAKSI AUDIO-VISUAL
+                </div>
+                <h1 style="font-size: 26px; font-weight: 900; color: var(--text); margin-bottom: 6px;">
+                    📘 Konsep Pembelajaran Animasi &amp; Suara
+                </h1>
+                <p style="font-size: 14px; color: var(--text2); margin: 0; max-width: 650px;">
+                    Pelajari seluruh konsep dasar UTBK SNBT melalui <strong>animasi visual interaktif &amp; pengucap suara narasi otomatis</strong> berdurasi 5 - 7 menit per modul subtest.
+                </p>
+            </div>
+            
+            <a href="{% url 'home' %}" style="text-decoration: none;">
+                <button type="button" style="padding: 10px 20px; background: #fff; color: var(--pink-dark); border: 1.5px solid var(--border); font-weight: 800;">
+                    🏠 Kembali ke Beranda
+                </button>
+            </a>
+        </div>
+    </div>
+
+    <!-- GRID CARDS -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+
+        {% for key, item in materi_map.items %}
+        <div class="card" style="padding: 24px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            
+            <div>
+                <!-- Top Badge Row -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div style="font-size: 32px; width: 56px; height: 56px; background: rgba(255, 77, 143, 0.08); border-radius: 14px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255, 77, 143, 0.15);">
+                        {{ item.icon }}
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="background: var(--pink-pale); color: var(--pink-dark); font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px; border: 1px solid var(--border);">
+                            ⏱️ {{ item.duration }}
+                        </span>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 18px; font-weight: 900; color: var(--text); margin-bottom: 4px;">
+                    {{ item.title }}
+                </h3>
+
+                <p style="font-size: 12px; font-weight: 700; color: var(--pink-dark); margin-bottom: 12px;">
+                    {{ item.subtitle }}
+                </p>
+
+                <p style="font-size: 13px; color: var(--text2); line-height: 1.5; margin-bottom: 18px;">
+                    {{ item.description }}
+                </p>
+            </div>
+
+            <!-- Footer Action -->
+            <div style="border-top: 1px solid var(--border-soft); padding-top: 16px; margin-top: 10px; display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 12px; font-weight: 800; color: var(--text3);">
+                    📊 {{ item.steps|length }} Tahapan Animasi
+                </span>
+
+                <a href="{% url 'materi_detail' key %}" style="text-decoration: none;">
+                    <button type="button" style="padding: 8px 18px; font-weight: 800; font-size: 13px; background: {{ item.gradient }}; border: none; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        ▶️ Putar Materi
+                    </button>
+                </a>
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

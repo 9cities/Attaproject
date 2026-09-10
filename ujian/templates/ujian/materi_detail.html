@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="container" style="max-width: 950px;">
+
+    <!-- NAVIGATION HEADER -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <a href="{% url 'materi_list' %}" style="text-decoration: none;">
+            <button type="button" style="padding: 8px 16px; background: var(--pink-pale); color: var(--pink-dark); border: 1.5px solid var(--border); font-weight: 800; font-size: 13px;">
+                ← Kembali ke Daftar Materi
+            </button>
+        </a>
+
+        <span style="font-size: 12px; font-weight: 800; color: var(--text3); background: #fff; padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border-soft);">
+            ⏱️ Estimasi Durasi: {{ materi.duration }}
+        </span>
+    </div>
+
+    <!-- MAIN ANIMATION PLAYER CARD -->
+    <div class="card" style="padding: 24px; border-radius: 20px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 2px solid var(--border-soft);">
+
+        <!-- HEADER TITLE -->
+        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+            <div style="font-size: 32px; width: 56px; height: 56px; background: rgba(255, 77, 143, 0.1); border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                {{ materi.icon }}
+            </div>
+            <div>
+                <h1 style="font-size: 22px; font-weight: 900; color: var(--text); margin: 0;">
+                    {{ materi.title }}
+                </h1>
+                <p style="font-size: 13px; font-weight: 700; color: var(--pink-dark); margin: 2px 0 0 0;">
+                    {{ materi.subtitle }}
+                </p>
+            </div>
+        </div>
+
+        <!-- PROGRESS STEPS TIMELINE BAR -->
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span id="stepTitleDisplay" style="font-size: 13px; font-weight: 900; color: var(--text);">
+                    Tahap 1 dari {{ materi.steps|length }}: {{ materi.steps.0.title }}
+                </span>
+                <span id="progressPercent" style="font-size: 12px; font-weight: 800; color: var(--pink-dark);">
+                    16%
+                </span>
+            </div>
+
+            <!-- STEP DOTS -->
+            <div style="display: flex; gap: 6px;" id="stepDotsContainer">
+                {% for st in materi.steps %}
+                <div class="step-dot" id="dot-{{ forloop.counter0 }}" onclick="jumpToStep({{ forloop.counter0 }})" 
+                     style="flex: 1; height: 8px; border-radius: 4px; background: #e2e8f0; cursor: pointer; transition: all 0.3s ease;"></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ANIMATION STAGE: CLASSROOM LAYOUT -->
+        <div style="background: linear-gradient(135deg, #1a1033 0%, #0d0b18 100%); border-radius: 20px; padding: 20px; position: relative; box-shadow: 0 8px 40px rgba(0,0,0,0.6); border: 2px solid rgba(255, 77, 143, 0.35);">
+
+            <!-- PARTICLES BACKGROUND -->
+            <div id="particleBg" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; border-radius: 20px; overflow: hidden;"></div>
+
+            <!-- TOP STATUS BAR -->
+            <div style="display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; margin-bottom: 16px;">
+                <div id="liveBadge" style="background: rgba(255, 77, 143, 0.2); border: 1px solid #ff4d8f; color: #ff85b3; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; display: flex; align-items: center; gap: 6px;">
+                    <span style="width: 8px; height: 8px; background: #ff4d8f; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span>
+                    <span id="badgeText">PLAYBACK STANDBY</span>
+                </div>
+                <div style="color: rgba(255,255,255,0.35); font-size: 10px; font-weight: 700; letter-spacing: 1px;">VOICE SYNTHESIZER · id-ID</div>
+            </div>
+
+            <!-- CLASSROOM: TEACHER LEFT + WHITEBOARD RIGHT -->
+            <div style="display: flex; align-items: stretch; gap: 20px; position: relative; z-index: 2; min-height: 240px;">
+
+                <!-- TEACHER CHARACTER -->
+                <div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 160px;">
+                    <img id="teacherImg" src="{% static 'img/teachers/teacher_pm.jpg' %}"
+                         alt="Guru" class="teacher-bounce"
+                         style="width: 150px; height: 200px; object-fit: contain; filter: drop-shadow(0 8px 20px rgba(255,77,143,0.5));">
+                </div>
+
+                <!-- WHITEBOARD -->
+                <div style="flex: 1; background: #2a3a2a; border-radius: 12px; border: 4px solid #5a3e1b; box-shadow: inset 0 0 30px rgba(0,0,0,0.4), 0 4px 20px rgba(0,0,0,0.5); padding: 20px 24px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;">
+                    <!-- Whiteboard chalk texture effect -->
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(255,255,255,0.015) 28px, rgba(255,255,255,0.015) 29px); pointer-events: none;"></div>
+                    <!-- Chalk tray at bottom -->
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 10px; background: #5a3e1b; border-radius: 0 0 8px 8px;"></div>
+
+                    <!-- Whiteboard content (updated by JS) -->
+                    <div id="whiteboardContent" style="position: relative; z-index: 1;">
+                        <div style="font-family: 'Segoe UI', sans-serif; color: rgba(255,255,255,0.5); font-size: 15px; text-align: center;">
+                            ✏️ Tekan Putar untuk mulai...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NARRATION CAPTION -->
+            <div id="captionBox" style="margin-top: 16px; background: rgba(0,0,0,0.45); backdrop-filter: blur(10px); border-radius: 10px; padding: 12px 18px; border: 1px solid rgba(255,255,255,0.08); color: #f1f5f9; font-size: 13px; font-weight: 600; line-height: 1.6; text-align: center; min-height: 48px; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2;">
+                Klik tombol "Putar Seluruh Materi" di bawah untuk memulai narasi pembelajaran.
+            </div>
+
+            <!-- SMALL NEON REMINDER (hidden, updated by JS) -->
+            <div id="animationStage" style="display: none;"></div>
+        </div>
+
+        <!-- PLAYER CONTROLS TOOLBAR -->
+        <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: var(--pink-pale); padding: 14px 18px; border-radius: 12px; border: 1.5px solid var(--border);">
+            
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" id="btnPlayAll" onclick="startAutoPlay()" style="padding: 10px 22px; font-size: 13px; font-weight: 900; background: var(--grad-btn); border-radius: 8px; display: flex; align-items: center; gap: 8px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5v14l11-7z"/></svg> Putar Seluruh Materi
+                </button>
+
+                <button type="button" onclick="pauseOrResume()" style="padding: 10px 16px; font-size: 13px; font-weight: 800; background: #fff; color: var(--pink-dark); border: 1.5px solid var(--border); display: flex; align-items: center; gap: 8px; border-radius: 8px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> Pause / Resume
+                </button>
+
+                <button type="button" onclick="stopSpeech()" style="padding: 10px 14px; font-size: 13px; font-weight: 800; background: #fff; color: #c5221f; border: 1.5px solid #f5c6cb; display: flex; align-items: center; gap: 8px; border-radius: 8px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M6 6h12v12H6z"/></svg> Stop
+                </button>
+            </div>
+
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" onclick="prevStep()" style="padding: 8px 14px; font-size: 12px; font-weight: 800; background: #fff; color: #333; border: 1.5px solid var(--border); display: flex; align-items: center; gap: 6px; border-radius: 6px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg> Prev
+                </button>
+
+                <button type="button" onclick="nextStep()" style="padding: 8px 14px; font-size: 12px; font-weight: 800; background: #fff; color: #333; border: 1.5px solid var(--border); display: flex; align-items: center; gap: 6px; border-radius: 6px;">
+                    Next <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                </button>
+
+                <select id="speedSelect" onchange="changeSpeed()" style="padding: 7px 10px; border-radius: 6px; border: 1.5px solid var(--border); font-size: 12px; font-weight: 800; background: #fff;">
+                    <option value="0.8">Kecepatan: 0.8x (Pelan)</option>
+                    <option value="1.0" selected>Kecepatan: 1.0x (Normal)</option>
+                    <option value="1.2">Kecepatan: 1.2x (Cepat)</option>
+                </select>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- QUICK REVISION SUMMARY CARDS -->
+    <div style="margin-top: 24px;">
+        <h3 style="font-size: 16px; font-weight: 900; color: var(--text); margin-bottom: 12px;">
+            📌 Ringkasan Poin Kunci Tahapan Materi:
+        </h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;">
+            {% for st in materi.steps %}
+            <div class="card" style="padding: 16px; border-radius: 12px; cursor: pointer;" onclick="jumpToStep({{ forloop.counter0 }})">
+                <div style="font-size: 11px; font-weight: 800; color: var(--pink-dark); margin-bottom: 4px;">
+                    TAHAP {{ st.num }}
+                </div>
+                <div style="font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 6px;">
+                    {{ st.title }}
+                </div>
+                <div style="font-size: 12px; color: var(--text2); line-height: 1.4;">
+                    {{ st.narration }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<style>
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+@keyframes glowPulse {
+    0% { filter: drop-shadow(0 0 5px #ff4d8f); }
+    50% { filter: drop-shadow(0 0 20px #ff4d8f); }
+    100% { filter: drop-shadow(0 0 5px #ff4d8f); }
+}
+
+.glow-card {
+    animation: glowPulse 2s infinite;
+}
+
+
+
+@keyframes teacherBounce {
+    0%   { transform: translateY(0px) rotate(0deg); }
+    25%  { transform: translateY(-10px) rotate(1.5deg); }
+    50%  { transform: translateY(0px) rotate(0deg); }
+    75%  { transform: translateY(-5px) rotate(-1deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+}
+.teacher-bounce {
+    animation: teacherBounce 3s ease-in-out infinite;
+    filter: drop-shadow(0 8px 24px rgba(255, 77, 143, 0.5));
+}
+
+@keyframes chalkWrite {
+    0%   { opacity: 0; transform: translateX(-10px); }
+    100% { opacity: 1; transform: translateX(0); }
+}
+</style>
+
+<script>
+
+// SET TEACHER IMAGE based on slug
+(function() {
+    const slug = "{{ slug }}";
+    const teacherMap = {
+        'pm':  "{% static 'img/teachers/teacher_pm.jpg' %}",
+        'pk':  "{% static 'img/teachers/teacher_pk.jpg' %}",
+        'pu':  "{% static 'img/teachers/teacher_pu.jpg' %}",
+        'ppu': "{% static 'img/teachers/teacher_ppu.jpg' %}",
+        'pbm': "{% static 'img/teachers/teacher_pbm.jpg' %}",
+        'lbi': "{% static 'img/teachers/teacher_lbi.jpg' %}",
+        'lbe': "{% static 'img/teachers/teacher_lbe.jpg' %}",
+    };
+    const img = document.getElementById('teacherImg');
+    if (img && teacherMap[slug]) {
+        img.src = teacherMap[slug];
+    }
+})();
+
+var rawData = {{ materi_json|safe }};
+var steps = rawData.steps || [];
+var currentIndex = 0;
+var isAutoPlaying = false;
+var isPaused = false;
+var speechRate = 1.0;
+
+function updateProgressUI() {
+    var pct = Math.round(((currentIndex + 1) / steps.length) * 100);
+    document.getElementById('progressPercent').innerText = pct + '%';
+    document.getElementById('stepTitleDisplay').innerText = 'Tahap ' + (currentIndex + 1) + ' dari ' + steps.length + ': ' + steps[currentIndex].title;
+    
+    // Update step dots
+    for (var i = 0; i < steps.length; i++) {
+        var dot = document.getElementById('dot-' + i);
+        if (dot) {
+            if (i === currentIndex) {
+                dot.style.background = 'var(--pink-dark)';
+                dot.style.boxShadow = '0 0 10px #ff4d8f';
+            } else if (i < currentIndex) {
+                dot.style.background = '#ff85b3';
+                dot.style.boxShadow = 'none';
+            } else {
+                dot.style.background = '#e2e8f0';
+                dot.style.boxShadow = 'none';
+            }
+        }
+    }
+}
+
+// ============================================================
+// WHITEBOARD RENDERER - writes materi onto the chalkboard
+// ============================================================
+function renderWhiteboard(step) {
+    var wb = document.getElementById('whiteboardContent');
+    if (!wb) return;
+
+    var vType = step.visual_type || 'default';
+
+    // Build key points from step properties (skip num, title, narration, visual_type)
+    var skipKeys = ['num','title','narration','visual_type'];
+    var points = [];
+    Object.keys(step).forEach(function(k) {
+        if (skipKeys.indexOf(k) === -1 && step[k]) {
+            points.push(step[k]);
+        }
+    });
+
+    // Chalk-style colors
+    var chalkColors = ['#fff', '#86efac', '#93c5fd', '#fde68a', '#f9a8d4', '#c4b5fd'];
+
+    // Build whiteboard HTML
+    var html = '';
+
+    // Step title (underlined like on a blackboard)
+    html += `<div style="font-family: 'Segoe UI', cursive; font-size: 15px; font-weight: 800; color: #ffffffcc; 
+                         letter-spacing: 1px; text-transform: uppercase; border-bottom: 2px solid rgba(255,255,255,0.3); 
+                         padding-bottom: 8px; margin-bottom: 14px; text-shadow: 0 0 8px rgba(255,255,255,0.3);">
+                ✎ ${step.title}
+              </div>`;
+
+    // Key points as chalk-written bullet points
+    if (points.length > 0) {
+        points.forEach(function(p, i) {
+            var col = chalkColors[i % chalkColors.length];
+            html += `<div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; 
+                                 animation: chalkWrite 0.5s ease ${i * 0.15}s both;">
+                        <span style="color: ${col}; font-size: 16px; margin-top: 1px;">◆</span>
+                        <span style="font-family: 'Segoe UI', sans-serif; font-size: 14px; font-weight: 700; 
+                                     color: ${col}; line-height: 1.4; text-shadow: 0 0 6px ${col}55;">${p}</span>
+                     </div>`;
+        });
+    }
+
+    // Formula if exists
+    if (step.formula) {
+        html += `<div style="margin-top: 14px; background: rgba(255,255,255,0.08); border-radius: 8px; 
+                             padding: 10px 16px; border-left: 3px solid #fde68a; font-size: 16px; 
+                             font-weight: 900; color: #fde68a; text-shadow: 0 0 10px #fde68a88; letter-spacing: 1px; font-family: monospace;">
+                   ${step.formula}
+                 </div>`;
+    }
+
+    wb.innerHTML = html;
+}
+
+function renderStage(step) {
+    // Call whiteboard renderer for the main display
+    renderWhiteboard(step);
+
+    var stage = document.getElementById('animationStage');
+    if (!stage) return;
+
+    var html = '';
+    var vType = step.visual_type || 'default';
+
+    if (vType === 'logic_flow' || vType === 'modus_ponens' || vType === 'modus_tollens' || vType === 'silogisme' || vType === 'kontraposisi' || vType === 'fallacy') {
+        html = `
+            <div style="display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; width: 100%;">
+                <div class="glow-card" style="background: rgba(255, 77, 143, 0.15); border: 2px solid #ff4d8f; padding: 18px 24px; border-radius: 14px; min-width: 140px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #ff85b3;">KOMPONEN A</div>
+                    <div style="font-size: 18px; font-weight: 900; color: #fff; margin-top: 4px;">${step.p1 || 'P1'}</div>
+                </div>
+
+                <div style="font-size: 24px; color: #ff85b3; font-weight: 900;">➔</div>
+
+                ${step.p2 ? `
+                <div class="glow-card" style="background: rgba(124, 58, 237, 0.15); border: 2px solid #7c3aed; padding: 18px 24px; border-radius: 14px; min-width: 140px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #a78bfa;">FAKTA / P2</div>
+                    <div style="font-size: 18px; font-weight: 900; color: #fff; margin-top: 4px;">${step.p2}</div>
+                </div>
+                <div style="font-size: 24px; color: #a78bfa; font-weight: 900;">➔</div>
+                ` : ''}
+
+                <div class="glow-card" style="background: rgba(16, 185, 129, 0.2); border: 2px solid #10b981; padding: 18px 24px; border-radius: 14px; min-width: 160px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #6ee7b7;">KESIMPULAN MUTLAK</div>
+                    <div style="font-size: 18px; font-weight: 900; color: #6ee7b7; margin-top: 4px;">${step.result || step.relation || 'OK'}</div>
+                </div>
+            </div>
+        `;
+    } else if (vType.startsWith('matrix')) {
+        html = `
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 12px; font-size: 32px; font-weight: 900; color: #fff;">
+                    <span style="font-size: 48px; color: #06b6d4;">[</span>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: center; background: rgba(6, 182, 212, 0.1); padding: 14px 20px; border-radius: 10px;">
+                        <span style="color: #67e8f9;">a</span>
+                        <span style="color: #f472b6;">b</span>
+                        <span style="color: #f472b6;">c</span>
+                        <span style="color: #67e8f9;">d</span>
+                    </div>
+                    <span style="font-size: 48px; color: #06b6d4;">]</span>
+                </div>
+
+                ${step.formula ? `
+                <div style="background: rgba(255, 255, 255, 0.1); border: 1.5px solid #06b6d4; padding: 12px 24px; border-radius: 30px; font-size: 20px; font-weight: 900; color: #67e8f9;">
+                    ${step.formula}
+                </div>
+                ` : ''}
+            </div>
+        `;
+    } else {
+        var extraProps = '';
+        for (var key in step) {
+            if (['num', 'title', 'narration', 'visual_type'].includes(key)) continue;
+            extraProps += `<div style="font-size: 18px; font-weight: 800; color: #6ee7b7; margin-top: 8px;">• ${step[key]}</div>`;
+        }
+        
+        html = `
+            <div style="background: rgba(255, 255, 255, 0.05); border: 1.5px solid rgba(255, 255, 255, 0.15); padding: 24px 32px; border-radius: 16px; width: 90%;">
+                <div style="font-size: 13px; font-weight: 800; color: #ff85b3; text-transform: uppercase; margin-bottom: 12px;">
+                    ${step.title}
+                </div>
+                <div style="font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 16px;">
+                    Konsep Kunci:
+                </div>
+                ${extraProps}
+            </div>
+        `;
+    }
+
+    stage.innerHTML = html;
+    document.getElementById('captionBox').innerText = step.narration;
+}
+
+function speakCurrentStep(onEndCallback) {
+    if (!('speechSynthesis' in window)) {
+        if (onEndCallback) setTimeout(onEndCallback, 4000);
+        return;
+    }
+
+    window.speechSynthesis.cancel();
+    var currentStep = steps[currentIndex];
+    var msg = new SpeechSynthesisUtterance(currentStep.narration);
+    
+    // Auto-detect language
+    msg.lang = (rawData.title.includes('English') || rawData.title.includes('LBE')) ? 'en-US' : 'id-ID';
+    msg.rate = speechRate;
+    msg.pitch = 1.0;
+
+    document.getElementById('badgeText').innerText = '🔊 MEMUTAR TAHAP ' + (currentIndex + 1);
+
+    msg.onend = function() {
+        document.getElementById('badgeText').innerText = '⏸️ STANDBY';
+        if (onEndCallback) onEndCallback();
+    };
+
+    msg.onerror = function() {
+        document.getElementById('badgeText').innerText = '⏸️ STANDBY';
+        if (onEndCallback) onEndCallback();
+    };
+
+    window.speechSynthesis.speak(msg);
+}
+
+function loadStep(index) {
+    if (index < 0) index = 0;
+    if (index >= steps.length) index = steps.length - 1;
+    currentIndex = index;
+    updateProgressUI();
+    renderStage(steps[currentIndex]);
+}
+
+function startAutoPlay() {
+    isAutoPlaying = true;
+    isPaused = false;
+    loadStep(currentIndex);
+    
+    function playLoop() {
+        if (!isAutoPlaying || isPaused) return;
+        speakCurrentStep(function() {
+            if (!isAutoPlaying || isPaused) return;
+            if (currentIndex < steps.length - 1) {
+                currentIndex++;
+                loadStep(currentIndex);
+                setTimeout(playLoop, 800);
+            } else {
+                isAutoPlaying = false;
+                document.getElementById('captionBox').innerText = '🎉 SELAMAT! Modul pembelajaran ini telah selesai diputar secara utuh.';
+                document.getElementById('badgeText').innerText = '✅ SELESAI';
+            }
+        });
+    }
+
+    playLoop();
+}
+
+function pauseOrResume() {
+    if ('speechSynthesis' in window) {
+        if (window.speechSynthesis.speaking) {
+            if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+                isPaused = false;
+                document.getElementById('badgeText').innerText = '🔊 MEMUTAR...';
+            } else {
+                window.speechSynthesis.pause();
+                isPaused = true;
+                document.getElementById('badgeText').innerText = '⏸️ PAUSED';
+            }
+        } else {
+            startAutoPlay();
+        }
+    }
+}
+
+function stopSpeech() {
+    isAutoPlaying = false;
+    isPaused = false;
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+    document.getElementById('badgeText').innerText = '⏹️ STOPPED';
+}
+
+function jumpToStep(idx) {
+    stopSpeech();
+    loadStep(idx);
+    speakCurrentStep();
+}
+
+function nextStep() {
+    stopSpeech();
+    if (currentIndex < steps.length - 1) {
+        currentIndex++;
+        loadStep(currentIndex);
+        speakCurrentStep();
+    }
+}
+
+function prevStep() {
+    stopSpeech();
+    if (currentIndex > 0) {
+        currentIndex--;
+        loadStep(currentIndex);
+        speakCurrentStep();
+    }
+}
+
+function changeSpeed() {
+    var sel = document.getElementById('speedSelect');
+    if (sel) {
+        speechRate = parseFloat(sel.value);
+    }
+}
+
+// Initial Load
+document.addEventListener('DOMContentLoaded', function() {
+    loadStep(0);
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ title }}</h2>
+
+    <p>Total soal dalam filter: <strong>{{ total_soal }}</strong></p>
+
+    <h3>Summary</h3>
+    <ul>
+        <li>Nilai tertinggi: {{ tinggi }}</li>
+        <li>Nilai terendah: {{ rendah }}</li>
+        <li>Rata-rata: {{ rata }}</li>
+        <li>Median: {{ median }}</li>
+    </ul>
+
+    <h3>Distribusi Nilai</h3>
+    <div style="display:flex;gap:12px;align-items:flex-end;overflow-x:auto;padding:15px 0;">
+        {% for b in buckets %}
+        <div style="text-align:center; min-width:44px;">
+            <div style="background:var(--grad-main, #ff4d8f);width:100%;height:{{ b.height }}px;border-radius:6px 6px 0 0;margin:0 auto;"></div>
+            <div style="font-size:11px;font-weight:700;margin-top:4px;color:var(--text2);">{{ b.label }}</div>
+            <div style="font-size:11px;font-weight:800;color:var(--pink-dark);">{{ b.count }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h3>Daftar Peserta (per skor)</h3>
+    <table border="1" cellpadding="6" style="border-collapse:collapse;width:100%;margin-top:10px;">
+        <tr style="background:#1f4e79;color:white;">
+            <th>No</th>
+            <th>Peserta</th>
+            <th>Benar</th>
+            <th>Skor</th>
+        </tr>
+        {% for r in rows %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>
+                <strong>{{ r.username }}</strong>
+                {% if r.terindikasi_curang %}
+                <br><span style="color: #dc3545; font-size: 11px; font-weight: 900; background: #ffe6e6; padding: 2px 6px; border-radius: 4px; border: 1px solid #ffcccc;">⚠️ INDIKASI CURANG</span>
+                {% endif %}
+            </td>
+            <td align="center">{{ r.benar }}</td>
+            <td align="center">{{ r.skor }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" align="center">Tidak ada peserta</td></tr>
+        {% endfor %}
+    </table>
+
+    <br>
+    <a href="{% url 'admin_statistik' %}"><button>Back</button></a>
+</div>
+{% endblock %}

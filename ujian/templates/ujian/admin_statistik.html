@@ -1,0 +1,688 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <!-- Card Frame Utama -->
+    <div class="card">
+
+        <!-- Header Halaman -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px; padding-bottom:14px; border-bottom:1.5px solid var(--border-soft);">
+            <a href="{% url 'home' %}" class="back-link" style="margin-top:0;">
+                ← Kembali ke Home
+            </a>
+            <div style="display:flex; gap:10px;">
+                <a href="{% url 'admin_change_credentials' %}" class="button" style="background:var(--grad-soft); color:var(--pink-dark); border:1.5px solid var(--border);">
+                    🔐 Ubah Akun Admin
+                </a>
+                <a href="/admin/" class="button" style="background:var(--grad-btn);">
+                    ⚙️ Panel Admin
+                </a>
+                <a href="{% url 'logout' %}" class="button" style="background:var(--pink-soft); color:var(--pink-dark); border:1.5px solid var(--border);">
+                    🚪 Keluar / Logout
+                </a>
+            </div>
+        </div>
+
+        <div style="text-align:center; margin-bottom:24px;">
+            <h2 style="font-size:24px; font-weight:900; background:var(--grad-main); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; display:inline-block; margin-bottom:8px;">
+                📊 Dashboard Statistik Admin
+            </h2>
+            <p style="color:var(--text2); font-size:14px;">
+                Kelola kategori soal, lihat hasil ujian, dan atur konfigurasi sistem.
+            </p>
+        </div>
+
+        <!-- SOLUSI LOGIN/ADMIN LOCK INFO BOX -->
+        <div class="alert" style="background:var(--pink-pale); border:1.5px solid var(--border); padding:16px; margin-bottom:24px;">
+            <strong style="color:var(--pink-dark); font-size:15px; display:block; margin-bottom:6px;">
+                💡 Solusi Tombol Admin Terisi Login Peserta:
+            </strong>
+            <span style="font-size:13px; line-height:1.6; color:var(--text2); display:block;">
+                Jika tombol <strong>Panel Admin</strong> tidak bisa dibuka karena masih terdeteksi sebagai login peserta biasa:
+                <ol style="margin-left:20px; margin-top:4px;">
+                    <li>Silakan klik tombol <strong>🚪 Keluar / Logout</strong> di kanan atas halaman ini (atau di menu sidebar Peserta).</li>
+                    <li>Setelah keluar, Anda akan dialihkan ke halaman Login. Masuklah menggunakan akun administrator (misal: <code>Admin</code>).</li>
+                    <li>Sekarang Anda bisa masuk ke Panel Admin dengan lancar!</li>
+                </ol>
+            </span>
+        </div>
+
+        <!-- STAT CARDS (4 Kolom) -->
+        <div class="stat-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom:28px;">
+            <div class="stat-box">
+                <div class="stat-label">Total Peserta</div>
+                <div class="stat-value">{{ total_peserta }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Total Ujian</div>
+                <div class="stat-value yellow">{{ total_ujian }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Nilai Tertinggi</div>
+                <div class="stat-value green">{{ nilai_tertinggi }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Rata-Rata Nilai</div>
+                <div class="stat-value">{{ rata_rata }}</div>
+            </div>
+        </div>
+
+        <!-- ===== PENGATURAN ANTI CHEAT ===== -->
+        <div class="alert" style="background:var(--card-bg); border:1.5px solid var(--border); padding:16px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <strong style="color:var(--text); font-size:16px; display:block; margin-bottom:4px;">
+                    🛡️ Keamanan Ujian (Anti-Cheat Mode)
+                </strong>
+                <span style="font-size:13px; color:var(--text2); display:block;">
+                    Jika diaktifkan, peserta tidak bisa klik kanan, blok teks, copy-paste, pindah tab, atau membuka Developer Tools (F12) saat ujian berlangsung.
+                </span>
+            </div>
+            <form method="POST" style="margin:0;" action="{% url 'admin_statistik' %}">
+                {% csrf_token %}
+                <input type="hidden" name="toggle_anti_cheat" value="1">
+                <button type="submit" class="button" style="background:{% if sistem_setting.anti_cheat_aktif %}var(--green-soft); color:#005e32; border-color:#84d8a2;{% else %}var(--pink-soft); color:var(--pink-dark); border-color:var(--border);{% endif %} padding:8px 16px; font-size:14px; white-space:nowrap;">
+                    {% if sistem_setting.anti_cheat_aktif %}
+                        ✅ AKTIF (Ujian Ketat)
+                    {% else %}
+                        ❌ NONAKTIF (Bebas)
+                    {% endif %}
+                </button>
+            </form>
+        </div>
+
+        <!-- ===== PENGATURAN AKSES JARINGAN LOKAL ===== -->
+        <div class="alert" style="background:var(--card-bg); border:1.5px solid var(--border); padding:16px; margin-bottom:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px;">
+                <div style="flex:1; min-width:300px;">
+                    <strong style="color:var(--text); font-size:16px; display:block; margin-bottom:4px;">
+                        🌐 Pintu Gerbang Jaringan (Akses HP / iPad)
+                    </strong>
+                    <span style="font-size:13px; color:var(--text2); display:block; margin-bottom:12px;">
+                        Silakan nyalakan <b>Mode Global</b> untuk akses dari mana saja, atau <b>Mode Lokal</b> untuk akses dalam satu jaringan Wi-Fi.
+                        Perangkat wajib memasukkan password ruangan terlebih dahulu.
+                    </span>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        {% if sistem_setting.network_online and sistem_setting.public_url %}
+                        <div style="background:var(--pink-soft); padding:8px 12px; border-radius:8px; display:inline-block; border:1px solid var(--pink-blush);">
+                            <span style="font-size:14px; font-weight:700; color:var(--pink-dark);">🌐 Tautan Global:</span>
+                            <code style="background:#fff; padding:4px 8px; border-radius:4px; border:1px solid #ddd; color:#d63384; user-select:all; cursor:pointer;" title="Blok dan Copy alamat ini">{{ sistem_setting.public_url }}</code>
+                        </div>
+                        {% endif %}
+                        
+                        {% if sistem_setting.network_local %}
+                        <div style="background:#e3f2fd; padding:8px 12px; border-radius:8px; display:inline-block; border:1px solid #90caf9;">
+                            <span style="font-size:14px; font-weight:700; color:#1565c0;">📡 Tautan Lokal:</span>
+                            <code style="background:#fff; padding:4px 8px; border-radius:4px; border:1px solid #ddd; color:#1976d2; user-select:all; cursor:pointer;" title="Blok dan Copy alamat ini">http://{{ local_ip }}:8000</code>
+                        </div>
+                        {% endif %}
+
+                        {% if not sistem_setting.network_online and not sistem_setting.network_local %}
+                        <div style="background:#f5f5f5; padding:8px 12px; border-radius:8px; display:inline-block; border:1px solid #ddd;">
+                            <span style="font-size:14px; font-weight:700; color:#555;">Tautan Ujian:</span>
+                            <code style="background:#fff; padding:4px 8px; border-radius:4px; border:1px solid #ccc; color:#777;">(Gerbang Ditutup)</code>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <form method="POST" style="margin:0; background:var(--bg); padding:15px; border-radius:12px; border:1.5px solid var(--border-soft); box-shadow:var(--shadow-sm); min-width:250px;" action="{% url 'admin_statistik' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="save_network_settings" value="1">
+                    
+                    <style>
+                        .net-switch input { opacity:0; width:0; height:0; position:absolute; }
+                        .net-slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#ccc; border-radius:24px; transition:.4s; }
+                        .net-slider:before { position:absolute; content:""; height:18px; width:18px; left:3px; bottom:3px; background-color:white; border-radius:50%; transition:.4s; box-shadow:0 2px 4px rgba(0,0,0,0.2); }
+                        .net-switch input:checked + .net-slider { background-color:#4cd964; }
+                        .net-switch input:checked + .net-slider:before { transform: translateX(20px); }
+                    </style>
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                        <span style="font-size:13px; font-weight:700; color:var(--text);">Mode Global:</span>
+                        <label class="net-switch" style="position:relative; display:inline-block; width:44px; height:24px;">
+                            <input type="checkbox" name="network_online" onchange="this.form.submit()" {% if sistem_setting.network_online %}checked{% endif %}>
+                            <span class="net-slider"></span>
+                        </label>
+                    </div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                        <span style="font-size:13px; font-weight:700; color:var(--text);">Mode Lokal:</span>
+                        <label class="net-switch" style="position:relative; display:inline-block; width:44px; height:24px;">
+                            <input type="checkbox" name="network_local" onchange="this.form.submit()" {% if sistem_setting.network_local %}checked{% endif %}>
+                            <span class="net-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div style="margin-bottom:15px;">
+                        <span style="font-size:13px; font-weight:700; color:var(--text); display:block; margin-bottom:6px;">Password:</span>
+                        <input type="text" name="network_password" value="{{ sistem_setting.network_password }}" placeholder="Kosongkan jika tidak perlu sandi" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--border); font-size:13px;">
+                    </div>
+                    
+                    <button type="submit" class="button" style="width:100%; justify-content:center; padding:8px; font-size:13px; background:var(--grad-btn);">
+                        💾 Simpan Pengaturan
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== PENGATURAN KATEGORI (WAKTU & JUMLAH SOAL) ===== -->
+        <div style="margin-bottom:28px;">
+            <h2 style="font-size:18px; font-weight:800; color:var(--text); margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+                ⚙️ Pengaturan Kategori (Waktu &amp; Soal)
+            </h2>
+
+            {% if kategori_settings %}
+            <div class="hasil-table-wrap" style="max-height:380px; overflow:auto; border:1.5px solid var(--border-soft); border-radius:var(--r);">
+                <table class="hasil-table">
+                    <thead>
+                        <tr>
+                            <th class="th-sticky">Kategori</th>
+                            <th>Jumlah Paket</th>
+                            <th>Paket Dikerjakan</th>
+                            <th>Total Soal Pool</th>
+                            <th>Jumlah SubTest</th>
+                            <th>Soal Tampil / SubTest</th>
+                            <th>Timer / SubTest</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for k in kategori_settings %}
+                        <tr>
+                            <td class="td-peserta">{{ k.label }}</td>
+                            <td>
+                                <span class="skor-val skor-mid" style="min-width:40px; font-size:12px;">
+                                    {{ k.jumlah_paket }} Paket
+                                </span>
+                            </td>
+                            <td>
+                                <span class="skor-val skor-good" style="min-width:40px; font-size:12px; background:var(--pink-blush); color:var(--pink-dark); border-color:var(--pink-dark);">
+                                    {{ k.paket_dikerjakan }} Paket
+                                </span>
+                            </td>
+                            <td>
+                                <span class="skor-val skor-good" style="min-width:40px; font-size:12px;">
+                                    {{ k.jumlah_soal }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="skor-val skor-good" style="min-width:40px; font-size:12px;">
+                                    {{ k.jumlah_subtest }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if k.soal_per_subtest > 0 %}
+                                    <span class="skor-val skor-mid" style="min-width:100px; font-size:12px;">
+                                        {{ k.soal_per_subtest }} Soal Acak
+                                    </span>
+                                {% else %}
+                                    <span style="color:var(--text3); font-size:13px; font-style:italic;">Semua Soal</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if k.timer_menit > 0 %}
+                                    <span class="skor-val skor-good" style="min-width:90px; font-size:12px;">
+                                        ⏱ {{ k.timer_menit }} Menit
+                                    </span>
+                                {% else %}
+                                    <span style="color:var(--text3); font-size:13px; font-style:italic;">Tak Terbatas</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" onclick="selectCategoryForEdit('{{ k.kategori }}', {{ k.soal_per_subtest }}, {{ k.timer_menit }})" style="padding:6px 14px; font-size:12px; border-radius:8px;">
+                                    ✏️ Edit
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="padding:24px; text-align:center; color:var(--text3); border:1.5px dashed var(--border); border-radius:var(--r); background:var(--bg2);">
+                Belum ada pengaturan kategori. 
+                <a href="/admin/ujian/kategorisetting/add/" class="button" style="margin-left:10px; padding:6px 12px; font-size:12px;">
+                    + Tambah Pengaturan Kategori
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ===== KONFIGURASI MASSAL SUBTEST (CUSTOM / SAMAKAN SEMUA) ===== -->
+        <div id="form_massal_box" style="margin-bottom:28px; background:var(--pink-blush); padding:20px; border-radius:var(--r); border:1.5px solid var(--border-soft); transition:var(--ease);">
+            <h3 style="font-size:16px; font-weight:800; color:var(--text); margin-bottom:6px; display:flex; align-items:center; gap:8px;">
+                ⚡ Atur Soal &amp; Waktu Massal (Custom per SubTest / Select All)
+            </h3>
+            <p style="color:var(--text2); font-size:12px; margin-bottom:16px;">
+                Gunakan form ini untuk menyamakan semua subtest, atau mengatur subtest tertentu saja (misal: hanya PU atau PBM) di dalam kategori terpilih.
+            </p>
+
+            <form method="post" action="{% url 'admin_statistik_update_massal' %}" style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
+                {% csrf_token %}
+                
+                <!-- Pilih Kategori -->
+                <div style="display:flex; flex-direction:column; gap:4px; flex:1.2; min-width:180px;">
+                    <label style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text2);">1. Pilih Kategori</label>
+                    <select id="form_massal_kategori" name="kategori" required style="padding:8px 12px; border-radius:8px; border:1.5px solid var(--border); background:#fff; font-family:inherit; color:var(--text);">
+                        <option value="" disabled selected>-- Pilih Kategori --</option>
+                        {% for code,label in kategori_choices %}
+                            <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Pilih Nama SubTest (Custom atau All) -->
+                <div style="display:flex; flex-direction:column; gap:4px; flex:1.5; min-width:200px;">
+                    <label style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text2);">2. Nama SubTest (Pilihan Custom)</label>
+                    <select id="form_massal_subtest" name="subtest_name" required style="padding:8px 12px; border-radius:8px; border:1.5px solid var(--border); background:#fff; font-family:inherit; color:var(--text);">
+                        <option value="__ALL__">✨ Samakan Semua SubTest (Select All) ✨</option>
+                        {% for name in distinct_subtest_names %}
+                            <option value="{{ name }}">Custom: Hanya SubTest "{{ name }}"</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Jumlah Soal -->
+                <div style="display:flex; flex-direction:column; gap:4px; width:110px;">
+                    <label style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text2);">3. Soal Tampil</label>
+                    <input id="form_massal_soal" type="number" name="soal_tampil" min="0" required value="10" style="padding:8px 12px; border-radius:8px; border:1.5px solid var(--border); background:#fff; font-family:inherit; color:var(--text); text-align:center;">
+                </div>
+
+                <!-- Durasi Waktu -->
+                <div style="display:flex; flex-direction:column; gap:4px; width:110px;">
+                    <label style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text2);">4. Waktu (Menit)</label>
+                    <input id="form_massal_timer" type="number" name="timer_menit" min="0" required value="10" style="padding:8px 12px; border-radius:8px; border:1.5px solid var(--border); background:#fff; font-family:inherit; color:var(--text); text-align:center;">
+                </div>
+
+                <!-- Tombol Submit -->
+                <div>
+                    <button type="submit" style="padding:10px 20px; border-radius:8px; font-weight:800; background:var(--grad-btn);">
+                        🚀 Terapkan Konfigurasi
+                    </button>
+                </div>
+            </form>
+
+            <!-- ===== LIVE PREVIEW CONTAINER ===== -->
+            <div id="livePreviewContainer" style="margin-top:20px; padding-top:16px; border-top:1.5px dashed var(--border-soft); display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h4 style="font-size:15px; font-weight:900; color:var(--pink-dark); margin:0; display:flex; align-items:center; gap:6px;">
+                        👁️ Preview Hasil Konfigurasi: <span id="previewKatName" style="color:var(--text);"></span>
+                    </h4>
+                    <span id="previewSummaryBadge" style="font-size:12px; font-weight:800; background:var(--pink-pale); color:var(--pink-dark); padding:4px 10px; border-radius:99px; border:1px solid var(--border);"></span>
+                </div>
+
+                <div class="hasil-table-wrap" style="max-height:300px; overflow:auto;">
+                    <table class="hasil-table" style="font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th class="th-sticky">Nama SubTest</th>
+                                <th>Status Konfigurasi</th>
+                                <th>Preview Soal Tampil</th>
+                                <th>Preview Durasi Waktu</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+<script>
+var categorySubtestsData = {{ category_subtests_json|safe }};
+
+function updateLivePreview() {
+    var katSelectElem = document.getElementById('form_massal_kategori');
+    if (!katSelectElem) return;
+    var katCode = katSelectElem.value;
+    var targetSubname = document.getElementById('form_massal_subtest').value;
+    var newSoal = parseInt(document.getElementById('form_massal_soal').value) || 0;
+    var newTimer = parseInt(document.getElementById('form_massal_timer').value) || 0;
+    
+    var container = document.getElementById('livePreviewContainer');
+    var tbody = document.getElementById('previewTableBody');
+    var titleSpan = document.getElementById('previewKatName');
+    var badgeSpan = document.getElementById('previewSummaryBadge');
+
+    if (!katCode || !categorySubtestsData[katCode] || categorySubtestsData[katCode].length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    var list = categorySubtestsData[katCode];
+    var katLabel = katSelectElem.options[katSelectElem.selectedIndex].text;
+
+    titleSpan.innerText = katLabel;
+    tbody.innerHTML = '';
+    container.style.display = 'block';
+
+    var changedCount = 0;
+
+    list.forEach(function(item) {
+        var tr = document.createElement('tr');
+        var isAffected = (targetSubname === '__ALL__' || targetSubname.toLowerCase() === item.nama.toLowerCase());
+
+        var finalSoal = isAffected ? newSoal : item.soal_tampil;
+        var finalTimer = isAffected ? newTimer : item.timer_menit;
+
+        if (isAffected) changedCount++;
+
+        var statusTd = isAffected 
+            ? '<span style="background:#e6f4ea; color:#137333; padding:2px 10px; border-radius:99px; font-weight:800; font-size:11px; border:1px solid #ceead6;">✨ Berubah (Preview)</span>'
+            : '<span style="background:var(--bg2); color:var(--text3); padding:2px 10px; border-radius:99px; font-weight:600; font-size:11px;">🔒 Tetap (DB)</span>';
+
+        var soalText = finalSoal > 0 ? (finalSoal + ' Soal Acak') : 'Semua Soal';
+        var timerText = finalTimer > 0 ? ('⏱ ' + finalTimer + ' Menit') : 'Tak Terbatas';
+
+        tr.innerHTML = 
+            '<td class="td-peserta"><strong>' + item.nama + '</strong></td>' +
+            '<td style="text-align:center;">' + statusTd + '</td>' +
+            '<td style="text-align:center;"><span class="skor-val skor-good" style="font-size:12px; min-width:80px;">' + soalText + '</span></td>' +
+            '<td style="text-align:center;"><span class="skor-val skor-mid" style="font-size:12px; min-width:80px;">' + timerText + '</span></td>';
+
+        tbody.appendChild(tr);
+    });
+
+    badgeSpan.innerText = changedCount + ' / ' + list.length + ' Jenis SubTest Terdampak';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var katInput = document.getElementById('form_massal_kategori');
+    var subInput = document.getElementById('form_massal_subtest');
+    var soalInput = document.getElementById('form_massal_soal');
+    var timerInput = document.getElementById('form_massal_timer');
+
+    if (katInput) katInput.addEventListener('change', updateLivePreview);
+    if (subInput) subInput.addEventListener('change', updateLivePreview);
+    if (soalInput) soalInput.addEventListener('input', updateLivePreview);
+    if (timerInput) timerInput.addEventListener('input', updateLivePreview);
+
+    updateLivePreview();
+});
+
+function selectCategoryForEdit(katCode, soalVal, timerVal) {
+    var katSelect = document.getElementById('form_massal_kategori');
+    var soalInput = document.getElementById('form_massal_soal');
+    var timerInput = document.getElementById('form_massal_timer');
+    var formBox = document.getElementById('form_massal_box');
+
+    if (katSelect) katSelect.value = katCode;
+    if (soalInput) soalInput.value = soalVal;
+    if (timerInput) timerInput.value = timerVal;
+
+    updateLivePreview();
+
+    if (formBox) {
+        formBox.scrollIntoView({ behavior: 'smooth' });
+        formBox.style.boxShadow = '0 0 25px rgba(255, 77, 143, 0.4)';
+        setTimeout(function() {
+            formBox.style.boxShadow = 'none';
+        }, 1500);
+    }
+}
+
+function toggleBreakdown(id) {
+    var elem = document.getElementById(id);
+    if (elem) {
+        elem.style.display = (elem.style.display === 'none' || elem.style.display === '') ? 'table-row' : 'none';
+    }
+}
+
+function deletePesertaAjax(event, formElem, userId, username, paket_id) {
+    if (event) event.preventDefault();
+    
+    var msg = paket_id ? 'Apakah Anda yakin ingin me-reset (menghapus riwayat) paket ini untuk ' + username + '?' : 'Apakah Anda yakin ingin menghapus data peserta ' + username + ' beserta seluruh riwayat ujiannya?';
+    if (!confirm(msg)) {
+        return false;
+    }
+
+    var formData = new FormData(formElem);
+    fetch(formElem.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            if (paket_id) {
+                // If it's just a package reset, reload the page to refresh stats
+                window.location.reload();
+            } else {
+                // If it's a full user deletion, remove the row with animation
+                var row = document.getElementById('user_row_' + userId);
+                var bdRow = document.getElementById('breakdown_' + userId);
+                if (row) {
+                    row.style.transition = 'all 0.3s ease';
+                    row.style.opacity = '0';
+                    row.style.transform = 'scale(0.95)';
+                    setTimeout(function() {
+                        row.remove();
+                        if (bdRow) bdRow.remove();
+                    }, 300);
+                }
+            }
+        } else {
+            alert(data.message || 'Gagal menghapus data peserta.');
+        }
+    })
+    .catch(function(err) {
+        alert('Terjadi kesalahan koneksi.');
+    });
+
+    return false;
+}
+
+// ── Simpan & Pulihkan Posisi Scroll Layar (Mencegah Layar Melompat Ke Atas) ──
+window.addEventListener('beforeunload', function() {
+    sessionStorage.setItem('admin_scroll_pos', window.scrollY);
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var savedPos = sessionStorage.getItem('admin_scroll_pos');
+    if (savedPos !== null) {
+        window.scrollTo(0, parseInt(savedPos));
+        sessionStorage.removeItem('admin_scroll_pos');
+    }
+});
+</script>
+
+        <hr style="border:none; border-top:1.5px solid var(--border-soft); margin-bottom:24px;">
+
+        <!-- ===== DAFTAR PESERTA & HASIL ===== -->
+        <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+                <h2 style="font-size:18px; font-weight:800; color:var(--text); margin:0;">
+                    📋 Daftar Hasil Ujian Peserta
+                </h2>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <a href="{% url 'import_soal' %}">
+                        <button type="button" style="padding:9px 16px; font-size:13px; font-weight:800; background:var(--pink-pale); color:var(--pink-dark); border:1.5px solid var(--border); box-shadow:none;">
+                            📥 Upload Soal (Excel)
+                        </button>
+                    </a>
+                    <a href="{% url 'admin_export_soal_excel' %}?kategori={{ selected_kategori|default:'' }}&paket={{ selected_paket|default:'' }}&subtest={{ selected_subtest|default:'' }}">
+                        <button type="button" style="padding:9px 16px; font-size:13px; font-weight:800; background:var(--pink-pale); color:var(--pink-dark); border:1.5px solid var(--border); box-shadow:none;">
+                            📦 Export Bank Soal (Excel)
+                        </button>
+                    </a>
+                    <a href="{% url 'admin_export_all_excel' %}">
+                        <button type="button" style="padding:9px 18px; font-size:13px; font-weight:800; background:var(--grad-btn);">
+                            📊 Export All Data Peserta (Excel)
+                        </button>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Form Filter -->
+            <form method="get" style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; background:var(--pink-blush); padding:16px; border-radius:var(--r2); border:1.5px solid var(--border-soft); margin-bottom:18px;">
+                <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:150px;">
+                    <label style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text2);">Paket Ujian</label>
+                    <select name="paket" style="padding:8px 12px; border-radius:8px; border:1.5px solid var(--border); background:#fff; font-family:inherit; color:var(--text);">
+                        <option value="">-- Semua Paket --</option>
+                        {% for p in pakets %}
+                        <option value="{{ p.id }}" {% if selected_paket == p.id %}selected{% endif %}>{{ p.nama }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:150px;">
+                    <label style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text2);">SubTest</label>
+                    <select name="subtest" style="padding:8px 12px; border-radius:8px; border:1.5px solid var(--border); background:#fff; font-family:inherit; color:var(--text);">
+                        <option value="">-- Semua SubTest --</option>
+                        {% for s in subtests %}
+                        <option value="{{ s.id }}" {% if selected_subtest == s.id %}selected{% endif %}>{{ s.paket.nama }} - {{ s.nama }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:150px;">
+                    <label style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text2);">Kategori</label>
+                    <select name="kategori" style="padding:8px 12px; border-radius:8px; border:1.5px solid var(--border); background:#fff; font-family:inherit; color:var(--text);">
+                        <option value="">-- Semua Kategori --</option>
+                        {% for code,label in kategori_choices %}
+                            <option value="{{ code }}" {% if selected_kategori == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="align-self:flex-end;">
+                    <button type="submit" style="padding:10px 24px; border-radius:8px;">Filter</button>
+                </div>
+            </form>
+
+            <div style="font-size:13px; color:var(--text2); margin-bottom:14px; padding:0 6px;">
+                📍 <strong>Filter Aktif:</strong> {{ filter_label }} — <strong>Total Soal:</strong> {{ total_soal_subset }}
+            </div>
+
+            <!-- Tabel Peserta -->
+            <div class="hasil-table-wrap" style="max-height:500px; overflow:auto; border:1.5px solid var(--border-soft); border-radius:var(--r);">
+                <table class="hasil-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50px; text-align:center;">No</th>
+                            <th class="th-sticky">Username Peserta</th>
+                            <th style="text-align:center;">Total Benar</th>
+                            <th style="text-align:center;">Nilai</th>
+                            <th style="text-align:center;">Status Ujian</th>
+                            <th style="text-align:center; min-width:180px;">Aksi Peserta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for peserta in daftar_peserta %}
+                        <tr id="user_row_{{ peserta.id }}" style="transition:all 0.3s ease;">
+                            <td style="text-align:center; color:var(--text3);">{{ forloop.counter }}</td>
+                            <td class="td-peserta">
+                                <strong>{{ peserta.username }}</strong>
+                                {% if peserta.breakdown %}
+                                <br>
+                                <button type="button" onclick="toggleBreakdown('breakdown_{{ peserta.id }}')" style="margin-top:4px; padding:3px 8px; font-size:11px; border-radius:6px; background:var(--pink-pale); color:var(--pink-dark); border:1px solid var(--border); box-shadow:none; cursor:pointer;">
+                                    🔍 Breakdown SubTest
+                                </button>
+                                {% endif %}
+                            </td>
+                            <td style="text-align:center;">
+                                <span class="skor-val skor-mid" style="min-width:65px; font-size:12px;">
+                                    {{ peserta.benar }} / {{ peserta.total_dikerjakan }} benar
+                                </span>
+                            </td>
+                            <td style="text-align:center;">
+                                <span class="skor-val {% if peserta.nilai >= 70 %}skor-good{% elif peserta.nilai >= 50 %}skor-mid{% else %}skor-low{% endif %}">
+                                    {{ peserta.nilai }}
+                                </span>
+                            </td>
+                            <td style="text-align:center;">
+                                {% if peserta.selesai %}
+                                    <span style="color:var(--pink-dark); font-weight:800; font-size:13px;">✅ Selesai</span>
+                                {% else %}
+                                    <span style="color:var(--text3); font-style:italic; font-size:13px;">⏳ Belum Selesai</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align:center;">
+                                <div style="display:flex; gap:6px; justify-content:center; align-items:center;">
+                                    <!-- Export Excel Peserta ini -->
+                                    <a href="{% url 'admin_export_peserta_excel' peserta.id %}">
+                                        <button type="button" title="Export Excel {{ peserta.username }}" style="padding:5px 10px; font-size:12px; border-radius:6px; background:var(--pink-pale); color:var(--pink-dark); border:1px solid var(--border); box-shadow:none;">
+                                            📥 Excel
+                                        </button>
+                                    </a>
+
+                                    <!-- Delete Peserta (AJAX, Zero Flicker) -->
+                                    {% if not peserta.is_superuser %}
+                                    <form method="post" action="{% url 'admin_delete_peserta' peserta.id %}{% if request.GET.paket %}?paket={{ request.GET.paket }}{% endif %}" onsubmit="return deletePesertaAjax(event, this, {{ peserta.id }}, '{{ peserta.username }}', '{{ request.GET.paket|default_if_none:"" }}');" style="display:inline; margin:0;">
+                                        {% csrf_token %}
+                                        <button type="submit" title="{% if request.GET.paket %}Reset Paket Ini{% else %}Hapus Peserta{% endif %}" style="padding:5px 10px; font-size:12px; border-radius:6px; background:#fce8e6; color:#c5221f; border:1px solid #f5c6cb; box-shadow:none;">
+                                            🗑️ {% if request.GET.paket %}Reset Paket{% else %}Hapus{% endif %}
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span style="font-size:11px; color:var(--text3); font-style:italic;">Admin Utama</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Sub-Row Breakdown Per-Paket & SubTest -->
+                        {% if peserta.breakdown %}
+                        <tr id="breakdown_{{ peserta.id }}" style="display:none; background:var(--pink-blush);">
+                            <td colspan="6" style="padding:14px 20px;">
+                                <div style="font-weight:800; font-size:13px; color:var(--pink-dark); margin-bottom:10px;">
+                                    📊 Rincian Breakdown Nilai per-Paket &amp; SubTest: {{ peserta.username }}
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:10px;">
+                                    {% for p in peserta.breakdown %}
+                                    <div style="background:#fff; padding:12px; border-radius:8px; border:1.5px solid var(--border-soft);">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid var(--border-soft); padding-bottom:6px;">
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <span style="font-weight:800; font-size:13px; color:var(--text);">📦 {{ p.paket_nama }}</span>
+                                                {% if p.terindikasi_curang %}
+                                                <span style="color: #dc3545; font-size: 11px; font-weight: 900; background: #ffe6e6; padding: 2px 8px; border-radius: 4px; border: 1px solid #ffcccc; display:inline-block;">⚠️ INDIKASI CURANG</span>
+                                                {% endif %}
+                                            </div>
+                                            <div style="display:flex; align-items:center; gap:10px;">
+                                                <span style="font-size:12px; font-weight:800; color:var(--pink-dark);">
+                                                    Subtotal: {{ p.benar }}/{{ p.total }} Benar (Nilai: {{ p.nilai }})
+                                                </span>
+                                                <!-- Tombol Delete Paket Spesifik (Kategori Test ini) -->
+                                                <form method="POST" action="{% url 'admin_delete_peserta' peserta.id %}?paket={{ p.paket_id }}" onsubmit="return deletePesertaAjax(event, this, '{{ peserta.id }}', '{{ peserta.username }}', '{{ p.paket_id }}');" style="margin:0;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" title="Hapus Riwayat Kategori {{ p.paket_nama }} untuk {{ peserta.username }}" style="padding:4px 8px; font-size:11px; border-radius:4px; background:#ffe5eb; color:#c5221f; border:1px solid #ffb3c6; box-shadow:none; cursor:pointer;">
+                                                        🗑️ Delete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                                            {% for st in p.subtests %}
+                                            <div style="background:{% if st.terindikasi_curang %}#ffe6e6; border:1px solid #ffcccc; color:#c5221f;{% else %}var(--pink-pale); border:1px solid var(--border);{% endif %} padding:4px 10px; border-radius:6px; font-size:12px;">
+                                                <strong>{{ st.subtest_nama }}:</strong> {{ st.benar }}/{{ st.total }} benar 
+                                                <span style="font-weight:800; color:{% if st.terindikasi_curang %}#dc3545{% else %}var(--pink-dark){% endif %}; margin-left:4px;">({{ st.nilai }}%)</span>
+                                                {% if st.terindikasi_curang %}<span title="Curang di subtes ini">⚠️</span>{% endif %}
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" style="text-align:center; padding:30px; color:var(--text3);">
+                                Belum ada data hasil ujian peserta untuk filter ini.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

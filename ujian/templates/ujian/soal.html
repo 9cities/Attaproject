@@ -1,0 +1,40 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>ATTA PROJECT</title>
+
+    <link rel="stylesheet" href="{% static 'ujian/css/style.css' %}">
+
+</head>
+<body>
+
+<div class="container">
+
+    <h1>ATTA PROJECT</h1>
+
+    {% for s in soal %}
+
+    <div class="card">
+
+        <h3>Soal {{ forloop.counter }}</h3>
+
+        <p><strong>{{ s.pertanyaan }}</strong></p>
+
+        <div class="opsi">A. {{ s.pilihan_a }}</div>
+        <div class="opsi">B. {{ s.pilihan_b }}</div>
+        <div class="opsi">C. {{ s.pilihan_c }}</div>
+        <div class="opsi">D. {{ s.pilihan_d }}</div>
+
+        <button>Jawab</button>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+</body>
+</html>

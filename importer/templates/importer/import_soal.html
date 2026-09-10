@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container" style="max-width: 750px;">
+
+    <div class="card" style="padding: 24px;">
+
+        <h1 style="font-size: 20px; font-weight: 800; color: var(--pink-dark); margin-bottom: 12px;">
+            📥 Import &amp; Upload Bank Soal Excel
+        </h1>
+
+        <div style="background: var(--pink-pale); border: 1.5px solid var(--border); padding: 16px; border-radius: var(--r2); margin-bottom: 20px; font-size: 13px; line-height: 1.6;">
+            <strong style="color: var(--pink-dark); font-size: 14px;">📌 Petunjuk Format Header File Excel:</strong>
+            <ul style="margin-top: 8px; margin-bottom: 8px; padding-left: 20px;">
+                <li><strong>Header Wajib:</strong> <code>Kategori</code>, <code>Pertanyaan</code> (atau <code>Soal</code>), <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, <code>E</code>, <code>Jawaban</code>, <code>Pembahasan</code></li>
+                <li><strong style="color: #c5221f;">⭐ Header Sangat Penting (Rekomendasi Utama):</strong> 
+                    <code>Sub</code> (atau <code>SubTest</code>: PU, PPU, PBM, PK, LBI saintek, LBI soshum, LBE, PM) dan 
+                    <code>Paket</code> / <code>Urutan</code> (misal: Konsep Dasar 1.1)
+                </li>
+            </ul>
+            <div style="font-size: 12px; color: var(--text2); font-style: italic;">
+                💡 Dengan mengisi kolom <strong>Sub</strong> dan <strong>Paket/Urutan</strong>, soal akan terkelompok secara presisi pada subtest yang sesuai dan <u>tidak akan teracak/tertukar ke subtest lain</u>.
+            </div>
+        </div>
+
+        {% if messages %}
+        <div style="margin-bottom: 18px;">
+            {% for message in messages %}
+            <div style="padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; margin-bottom: 6px;
+                {% if message.tags == 'error' %}
+                    background: #fce8e6; color: #c5221f; border: 1px solid #f5c6cb;
+                {% else %}
+                    background: #e6f4ea; color: #137333; border: 1px solid #ceead6;
+                {% endif %}
+            ">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 16px;">
+            {% csrf_token %}
+
+            <div>
+                <label style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text2); display: block; margin-bottom: 6px;">
+                    Pilih File Excel (.xlsx)
+                </label>
+                <input type="file" name="file" accept=".xlsx" style="padding: 10px; border: 1.5px solid var(--border); border-radius: 8px; width: 100%; background: #fff;">
+            </div>
+
+            <!-- Opsi Replace Mode -->
+            <div style="background:#fff; border:1.5px solid var(--border-soft); padding:12px 16px; border-radius:8px; display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" name="replace_mode" id="replaceMode" value="1" style="width:18px; height:18px; accent-color:var(--pink-dark);">
+                <label for="replaceMode" style="font-size:13px; font-weight:700; color:var(--text); cursor:pointer;">
+                    🔄 Timpa / Replace Soal Lama pada SubTest yang Di-upload
+                    <div style="font-size:11px; font-weight:normal; color:var(--text3);">
+                        Jika dicentang, seluruh soal lama di subtest bersangkutan akan digantikan 100% dengan isi file Excel ini.
+                    </div>
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+                <button type="submit" style="padding: 10px 24px; background: var(--grad-btn); font-weight: 800;">
+                    🚀 Upload &amp; Proses Excel
+                </button>
+                <a href="{% url 'admin_statistik' %}" style="text-decoration: none;">
+                    <button type="button" style="padding: 10px 18px; background: var(--pink-pale); color: var(--pink-dark); border: 1.5px solid var(--border); box-shadow: none;">
+                        ← Kembali ke Statistik
+                    </button>
+                </a>
+            </div>
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

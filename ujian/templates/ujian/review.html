@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container">
+
+
+    <div class="card">
+
+
+        <h1>
+            ATTA PROJECT
+        </h1>
+
+
+        <h2 style="text-align:center;">
+            📖 Review Jawaban
+        </h2>
+
+
+        <hr>
+
+
+
+
+        {% for item in data_review %}
+
+
+        <div class="card"
+        style="
+        margin-bottom:20px;
+        ">
+
+
+            <h3>
+                Soal {{ forloop.counter }}
+            </h3>
+
+
+
+            <div>
+                <b>
+                    {{ item.soal.pertanyaan|safe }}
+                </b>
+            </div>
+
+
+
+            <hr>
+
+
+
+            <p>
+                Jawaban Anda :
+
+                <b>
+                    {{ item.jawaban_user }}
+                </b>
+            </p>
+
+
+
+            <p>
+                Jawaban Benar :
+
+                <b>
+                    {{ item.jawaban_benar }}
+                </b>
+            </p>
+
+
+
+
+
+            {% if item.status == "BENAR" %}
+
+
+                <p style="
+                color:green;
+                font-weight:bold;
+                ">
+
+                    ✅ BENAR
+
+                </p>
+
+
+
+            {% else %}
+
+
+
+                <p style="
+                color:red;
+                font-weight:bold;
+                ">
+
+                    ❌ SALAH
+
+                </p>
+
+
+
+            {% endif %}
+
+
+
+        </div>
+
+
+
+        {% empty %}
+
+
+
+        <div class="card">
+
+            <h3>
+                Belum ada jawaban.
+            </h3>
+
+        </div>
+
+
+
+        {% endfor %}
+
+
+
+
+
+        <br>
+
+
+
+        <div style="text-align:center;">
+
+
+            <a href="{% url 'home' %}">
+
+
+                <button type="button">
+
+
+                    🏠 Kembali ke Home
+
+
+                </button>
+
+
+            </a>
+
+
+        </div>
+
+
+
+    </div>
+
+
+</div>
+
+
+
+{% endblock %}
+{% block extra_js %}
+{% if soal_berubah %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        Swal.fire({
+            icon: 'info',
+            title: 'Informasi Histori',
+            text: 'Beberapa atau seluruh soal pada paket ini telah diupdate atau dihapus oleh Admin. Review detail hanya menampilkan soal yang masih tersedia.',
+            confirmButtonText: 'Mengerti',
+            confirmButtonColor: '#ff4d8f'
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

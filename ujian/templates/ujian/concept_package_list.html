@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+    <div class="card">
+        <h1>{{ kategori_label }}</h1>
+        <p>Pilih paket untuk melihat subtest. Gunakan scroll jika paket banyak.</p>
+
+        <div class="package-scroll">
+            <ul>
+                {% for paket in packages %}
+                    <li>
+                        {% if paket.finished %}
+                            <a href="#" class="package-link" style="color: grey; cursor: not-allowed; text-decoration: none; background-color: #f8f9fa; pointer-events: none;">
+                                {{ paket.nama }}
+                                <span class="package-note" style="color: #6c757d; font-size: 0.9em; margin-left: 5px;">(Sudah Selesai)</span>
+                            </a>
+                        {% else %}
+                            <a href="{{ paket.url }}" class="package-link{% if not paket.exists %} package-missing{% endif %}">
+                                {{ paket.nama }}
+                                {% if not paket.exists %}
+                                    <span class="package-note">(belum tersedia)</span>
+                                {% endif %}
+                            </a>
+                        {% endif %}
+                    </li>
+                {% empty %}
+                    <li>Tidak ada paket.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <br>
+        <a href="{% url 'home' %}">Kembali ke Home</a>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container" style="max-width: 600px;">
+
+    <div class="card">
+
+        <!-- Navigasi Atas -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:14px; border-bottom:1.5px solid var(--border-soft);">
+            <a href="{% url 'admin_statistik' %}" class="back-link" style="margin-top:0;">
+                ← Kembali ke Statistik
+            </a>
+        </div>
+
+        <div style="text-align:center; margin-bottom:24px;">
+            <h2 style="font-size:22px; font-weight:900; background:var(--grad-main); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; display:inline-block; margin-bottom:8px;">
+                🔐 Ubah Username &amp; Password Admin
+            </h2>
+            <p style="color:var(--text2); font-size:13px;">
+                Perbarui kredensial akun administrator Anda secara berkala demi keamanan.
+            </p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert" style="margin-bottom:18px;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" style="display:flex; flex-direction:column; gap:16px;">
+            {% csrf_token %}
+
+            <!-- Username Admin -->
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <label style="font-size:12px; font-weight:800; text-transform:uppercase; color:var(--text2);">
+                    👤 Username Admin Baru
+                </label>
+                <input 
+                    type="text" 
+                    name="username" 
+                    value="{{ request.user.username }}" 
+                    required 
+                    style="padding:12px 16px; border-radius:var(--r2); border:1.5px solid var(--border); background:#fff; font-family:inherit; color:var(--text); font-size:14px; font-weight:700;"
+                >
+                <span style="font-size:11px; color:var(--text3);">Username yang digunakan untuk login ke sistem admin.</span>
+            </div>
+
+            <hr style="border:none; border-top:1.5px solid var(--border-soft); margin:6px 0;">
+
+            <!-- Password Baru -->
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <label style="font-size:12px; font-weight:800; text-transform:uppercase; color:var(--text2);">
+                    🔑 Password Baru (Opsional)
+                </label>
+                <input 
+                    type="password" 
+                    name="new_password" 
+                    placeholder="Kosongkan jika tidak ingin mengubah password"
+                    style="padding:12px 16px; border-radius:var(--r2); border:1.5px solid var(--border); background:#fff; font-family:inherit; color:var(--text); font-size:14px;"
+                >
+            </div>
+
+            <!-- Konfirmasi Password -->
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <label style="font-size:12px; font-weight:800; text-transform:uppercase; color:var(--text2);">
+                    🔒 Konfirmasi Password Baru
+                </label>
+                <input 
+                    type="password" 
+                    name="confirm_password" 
+                    placeholder="Ketik ulang password baru Anda"
+                    style="padding:12px 16px; border-radius:var(--r2); border:1.5px solid var(--border); background:#fff; font-family:inherit; color:var(--text); font-size:14px;"
+                >
+            </div>
+
+            <!-- Tombol Aksi -->
+            <div style="display:flex; gap:12px; margin-top:10px;">
+                <button type="submit" style="flex:1; padding:12px 24px; font-size:14px; font-weight:800;">
+                    💾 Simpan Perubahan
+                </button>
+                <a href="{% url 'admin_statistik' %}" style="text-decoration:none;">
+                    <button type="button" style="background:var(--bg3); color:var(--text2); border:1.5px solid var(--border-soft); box-shadow:none; padding:12px 20px;">
+                        Batal
+                    </button>
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

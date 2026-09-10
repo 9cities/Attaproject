@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>🎓 Hasil Ujian</h1>
+
+    <div class="card">
+
+        <!-- HEADER INFO -->
+        <div class="hasil-header">
+            <div class="hasil-info-row">
+                <div class="hasil-info-item">
+                    <span class="hasil-info-label">Nama Peserta</span>
+                    <span class="hasil-info-value">{{ username }}</span>
+                </div>
+                <div class="hasil-info-item">
+                    <span class="hasil-info-label">Jadwal Test</span>
+                    <span class="hasil-info-value">
+                        {% if waktu_test %}{{ waktu_test|date:"d-M-y" }}{% else %}—{% endif %}
+                    </span>
+                </div>
+                <div class="hasil-info-item">
+                    <span class="hasil-info-label">Kategori / Paket</span>
+                    <span class="hasil-info-value">{{ paket_nama|default:"—" }}</span>
+                </div>
+                <div class="hasil-info-item">
+                    <span class="hasil-info-label">Durasi</span>
+                    <span class="hasil-info-value">{{ durasi }} menit</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABEL RIWAYAT PAKET (SUMMARY) -->
+        <div style="margin-top:20px;">
+            <h3 style="font-size:16px; font-weight:800; color:var(--text); margin-bottom:12px;">
+                📈 Riwayat Paket yang Selesai Dikerjakan (Nilai UTBK)
+            </h3>
+            <div class="hasil-table-wrap" style="max-height:400px; overflow:auto; border:1.5px solid var(--border-soft); border-radius:var(--r);">
+                <table class="hasil-table" style="font-size:12px;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:center; width:40px;">No</th>
+                            <th class="th-sticky" style="text-align:left;">Nama Paket</th>
+                            <th style="text-align:center;">Kategori</th>
+                            <th style="text-align:center;">Tanggal</th>
+                            <th style="text-align:center;">Durasi</th>
+                            <th style="text-align:center;" title="Penalaran Umum">PU</th>
+                            <th style="text-align:center;" title="Pengetahuan & Pemahaman Umum">PPU</th>
+                            <th style="text-align:center;" title="Pemahaman Bacaan & Menulis">PBM</th>
+                            <th style="text-align:center;" title="Pengetahuan Kuantitatif">PK</th>
+                            <th style="text-align:center;" title="Literasi Bahasa Indonesia Saintek">LBI Saintek</th>
+                            <th style="text-align:center;" title="Literasi Bahasa Indonesia Soshum">LBI Soshum</th>
+                            <th style="text-align:center;" title="Literasi Bahasa Inggris">LBE</th>
+                            <th style="text-align:center;" title="Penalaran Matematika">PM</th>
+                            <th style="text-align:center; min-width:90px; background:rgba(255, 77, 143, 0.1);">Nilai Akhir</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in riwayat_paket %}
+                        <tr>
+                            <td style="text-align:center; color:var(--text3);">{{ forloop.counter }}</td>
+                            <td class="td-peserta" style="font-weight:800;">{{ row.paket_nama }}</td>
+                            <td style="text-align:center; color:var(--text2);">{{ row.kategori }}</td>
+                            <td style="text-align:center; color:var(--text2);">{{ row.tanggal }}</td>
+                            <td style="text-align:center; color:var(--text2);">{{ row.durasi }}</td>
+                            
+                            <!-- Skor Subtest -->
+                            <td style="text-align:center;">{% if row.scores.PU != None %}{{ row.scores.PU }}{% else %}-{% endif %}</td>
+                            <td style="text-align:center;">{% if row.scores.PPU != None %}{{ row.scores.PPU }}{% else %}-{% endif %}</td>
+                            <td style="text-align:center;">{% if row.scores.PBM != None %}{{ row.scores.PBM }}{% else %}-{% endif %}</td>
+                            <td style="text-align:center;">{% if row.scores.PK != None %}{{ row.scores.PK }}{% else %}-{% endif %}</td>
+                            
+                            <td style="text-align:center;">{% if row.scores.LBI_saintek != None %}{{ row.scores.LBI_saintek }}{% else %}-{% endif %}</td>
+                            <td style="text-align:center;">{% if row.scores.LBI_soshum != None %}{{ row.scores.LBI_soshum }}{% else %}-{% endif %}</td>
+                            
+                            <td style="text-align:center;">{% if row.scores.LBE != None %}{{ row.scores.LBE }}{% else %}-{% endif %}</td>
+                            <td style="text-align:center;">{% if row.scores.PM != None %}{{ row.scores.PM }}{% else %}-{% endif %}</td>
+                            
+                            <!-- Nilai Akhir -->
+                            <td style="text-align:center; font-weight:900; background:rgba(255, 77, 143, 0.05); color:var(--pink-dark);">
+                                {{ row.nilai_akhir }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="13" style="text-align:center; padding:20px; color:var(--text3); font-style:italic;">
+                                Belum ada riwayat paket ujian yang diselesaikan.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABEL RINCIAN NILAI PER SUBTEST & JUMLAH SALAH -->
+        {% if total_sisa_salah > 0 %}
+        <div style="margin-top:20px;">
+            <h3 style="font-size:16px; font-weight:800; color:var(--text); margin-bottom:12px;">
+                📊 Daftar Latihan Soal Salah
+            </h3>
+
+            <div class="hasil-table-wrap" style="max-height:400px; overflow:auto; border:1.5px solid var(--border-soft); border-radius:var(--r);">
+                <table class="hasil-table" style="font-size:13px;">
+                    <thead>
+                        <tr>
+                            <th class="th-sticky" style="text-align:left;">Nama SubTest</th>
+                            <th style="text-align:center;">Nama Paket</th>
+                            <th style="text-align:center;">Total Soal</th>
+                            <th style="text-align:center;">Jumlah Benar</th>
+                            <th style="text-align:center;">Jumlah Salah</th>
+                            <th style="text-align:center;">Nilai (%)</th>
+                            <th style="text-align:center;">Aksi Mode Latihan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for st in subtest_hasil %}
+                        {% if st.sisa_salah > 0 %}
+                        <tr>
+                            <td class="td-peserta" style="font-weight:800;">{{ st.nama }}</td>
+                            <td style="text-align:center; color:var(--text2);">{{ st.paket_nama }}</td>
+                            <td style="text-align:center;">{{ st.total }} Soal</td>
+                            <td style="text-align:center;">
+                                <span class="skor-val skor-good" style="font-size:12px; min-width:60px;">
+                                    ✅ {{ st.benar }} Benar
+                                </span>
+                            </td>
+                            <td style="text-align:center;">
+                                <a href="{% url 'latihan_soal_salah_nav' st.id 1 %}" style="text-decoration:none;">
+                                    <span class="skor-val skor-low" style="font-size:12px; min-width:60px; cursor:pointer;">
+                                        ❌ {{ st.sisa_salah }} Salah
+                                    </span>
+                                </a>
+                            </td>
+                            <td style="text-align:center;">
+                                <span class="skor-val {% if st.skor >= 70 %}skor-good{% elif st.skor >= 50 %}skor-mid{% else %}skor-low{% endif %}">
+                                    {{ st.skor }}
+                                </span>
+                            </td>
+                            <td style="text-align:center;">
+                                <a href="{% url 'latihan_soal_salah_nav' st.id 1 %}" style="text-decoration:none;">
+                                    <button type="button" style="padding:6px 12px; font-size:11px; font-weight:800; background:var(--pink-pale); color:var(--pink-dark); border:1px solid var(--border); box-shadow:none; cursor:pointer;">
+                                        📝 Latihan {{ st.sisa_salah }} Soal Salah
+                                    </button>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr style="background:var(--pink-blush); font-weight:900;">
+                            <td style="text-align:left; font-weight:900; color:var(--pink-dark);">TOTAL KESELURUHAN</td>
+                            <td style="text-align:center;">{{ total_soal }} Soal</td>
+                            <td style="text-align:center; color:#137333;">✅ {{ total_benar }} Benar</td>
+                            <td style="text-align:center; color:#c5221f;">
+                                <a href="{% url 'latihan_soal_salah_nav' 0 1 %}" style="text-decoration:none; color:#c5221f;">
+                                    ❌ {{ total_sisa_salah }} Salah
+                                </a>
+                            </td>
+                            <td style="text-align:center;">
+                                <span class="skor-total {% if rata_rata >= 70 %}skor-good{% elif rata_rata >= 50 %}skor-mid{% else %}skor-low{% endif %}">
+                                    {{ rata_rata }}
+                                </span>
+                            </td>
+                            <td style="text-align:center;">
+                                <a href="{% url 'latihan_soal_salah_nav' 0 1 %}" style="text-decoration:none;">
+                                    <button type="button" style="padding:7px 14px; font-size:12px; font-weight:800; background:var(--grad-btn);">
+                                        🚀 Latihan Semua Soal Salah ({{ total_sisa_salah }})
+                                    </button>
+                                </a>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- TOMBOL -->
+        <div style="display:flex; gap:12px; margin-top:24px; flex-wrap:wrap;">
+            <a href="{% url 'home' %}">
+                <button type="button">🏠 Kembali ke Home</button>
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

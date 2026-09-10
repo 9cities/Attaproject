@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="display:flex; justify-content:center; align-items:center; min-height:70vh;">
+    <div class="card" style="max-width:500px; width:100%; text-align:center; padding:40px 30px;">
+        
+        <div style="font-size:50px; margin-bottom:20px;">🎓</div>
+        
+        <h1 style="font-size:24px; color:var(--pink-dark); margin-bottom:10px;">
+            Persiapan Ujian
+        </h1>
+        <h2 style="font-size:20px; font-weight:700; margin-bottom:20px; color:var(--text);">
+            {{ paket.nama }}
+        </h2>
+        
+        <p style="color:var(--text2); line-height:1.6; margin-bottom:25px; font-size:15px;">
+            Anda akan mengerjakan ujian ini secara berurutan. Ujian terdiri dari bagian: <br>
+            <b style="color:var(--pink-main);">{{ subtest_names }}</b>.
+        </p>
+
+        <div style="background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:15px; margin-bottom:30px; display:flex; justify-content:space-around; align-items:center;">
+            <div>
+                <span style="display:block; font-size:12px; color:var(--text2); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Total Waktu</span>
+                <span style="font-size:18px; font-weight:800; color:var(--text);">{{ total_waktu }} Menit</span>
+            </div>
+            <div style="width:1px; height:40px; background:var(--border);"></div>
+            <div>
+                <span style="display:block; font-size:12px; color:var(--text2); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Total Soal</span>
+                <span style="font-size:18px; font-weight:800; color:var(--text);">{{ total_soal }} Soal</span>
+            </div>
+        </div>
+
+        {% if error %}
+            <div style="background:var(--pink-soft); color:var(--pink-dark); padding:10px; border-radius:8px; border:1px solid var(--pink-light); margin-bottom:20px; font-weight:600; font-size:14px;">
+                ⚠️ {{ error }}
+            </div>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+            {% if total_soal > 0 %}
+                <form method="get" action="{% url 'mulai_paket_ujian' paket.id %}">
+                    <button type="submit" class="button" style="width:100%; justify-content:center; padding:14px; font-size:16px; background:var(--grad-btn);">
+                        🚀 MULAI UJIAN SEKARANG
+                    </button>
+                </form>
+            {% else %}
+                <button disabled class="button" style="width:100%; justify-content:center; padding:14px; font-size:16px; background:#ccc; color:#666;">
+                    📭 Soal Belum Tersedia
+                </button>
+            {% endif %}
+        {% else %}
+            <div style="padding:15px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; color:var(--text2); margin-bottom:20px;">
+                🔒 Anda harus login terlebih dahulu
+            </div>
+        {% endif %}
+        
+        <div style="margin-top:25px;">
+            <a href="{% url 'home' %}" style="color:var(--text2); text-decoration:none; font-size:14px; font-weight:600;">
+                ← Kembali ke Halaman Utama
+            </a>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

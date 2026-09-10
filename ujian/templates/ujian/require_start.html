@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="card">
+
+        <h2>Subtest belum dimulai</h2>
+
+        <p>Soal ini merupakan bagian dari subtest <b>{{ subtest.nama }}</b> pada paket <b>{{ paket.nama }}</b>.</p>
+
+        <p>Silakan mulai subtest terlebih dahulu agar timer dan sesi tercatat.</p>
+
+        {% if user.is_authenticated %}
+            <a href="{% url 'start_subtest' paket.nama subtest.id %}">
+                <button type="button">Mulai Subtest</button>
+            </a>
+        {% else %}
+            <p>Silakan <a href="{% url 'login' %}">login</a> terlebih dahulu.</p>
+        {% endif %}
+
+        <br><br>
+
+        <a href="{% url 'daftar_soal_kategori' paket.nama %}">Kembali ke daftar subtest</a>
+
+    </div>
+
+</div>
+
+{% endblock %}

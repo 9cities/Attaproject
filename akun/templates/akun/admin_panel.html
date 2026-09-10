@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <h1>ATTA PROJECT</h1>
+        <h2 style="text-align:center;">Panel Admin</h2>
+        <hr>
+
+        <div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center; margin-bottom:20px;">
+            <a href="/admin/">
+                <button type="button">🔧 Masuk Admin Django</button>
+            </a>
+            <a href="{% url 'home' %}">
+                <button type="button">🏠 Kembali ke Home</button>
+            </a>
+            <form method="post" action="{% url 'build_concept_subtests' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit">🧩 Bangun Subtest Konsep</button>
+            </form>
+        </div>
+
+        <div class="card" style="background:#f8f9fa; padding:20px;">
+            <h3>📤 Upload Soal</h3>
+            <p>Gunakan file Excel (.xlsx) atau CSV dengan kolom:</p>
+            <pre>paket,sub_test,timer_menit,kategori,pertanyaan,pilihan_a,pilihan_b,pilihan_c,pilihan_d,pilihan_e,jawaban_benar,pembahasan</pre>
+            <p>Contoh Subtest: <strong>Penalaran Umum</strong>, Timer: <strong>30</strong> menit, Kategori: <strong>EASY</strong>.</p>
+            <form method="post" action="{% url 'upload_paket' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div style="margin-bottom:10px;">
+                    <label style="margin-right:15px;"><input type="radio" name="upload_mode" value="append" checked> Tambahkan (Append)</label>
+                    <label><input type="radio" name="upload_mode" value="replace"> Ganti Semua (Replace)</label>
+                </div>
+                <input type="file" name="file" accept=".csv,.xlsx" required>
+                <button type="submit" style="margin-top:10px;">Upload File</button>
+            </form>
+        </div>
+
+        <div class="card" style="background:#f8f9fa; padding:20px; margin-top:20px;">
+            <h3>ℹ️ Catatan</h3>
+            <p>Jika subtest muncul dengan timer 0 menit, itu artinya subtest belum diberi nilai timer pada file impor.</p>
+            <p>Pastikan setiap subtest memiliki nilai <strong>timer_menit</strong> dan pertanyaan agar soal dapat tampil.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

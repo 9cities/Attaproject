@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="card">
+        <div class="exam-header-container">
+            <div class="exam-info-box">
+                <h2>ATTA PROJECT</h2>
+                <p>Peserta : <b>{{ user.username }}</b></p>
+                {% if subtest %}
+                    <p>Subtest: <b>{{ subtest.nama }}</b></p>
+                {% endif %}
+            </div>
+
+            <div class="exam-action-box">
+                <h3 class="exam-progress-text">Soal {{ current_index }} dari {{ total }}</h3>
+                <h3 id="timer" class="exam-timer-text">Loading...</h3>
+                <div class="exam-buttons">
+                    <a href="{% url 'home' %}"><button type="button">🏠 Home</button></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="nomor-panel">
+        {% for item in nomor_links %}
+            <a href="{% url 'tampil_soal' item.id %}" class="nomor {% if item.id == soal.id %}aktif{% endif %} {% if item.answered %}selesai{% endif %}">
+                {{ item.index }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <div class="card">
+        <h2>Pertanyaan</h2>
+        <div>{{ soal.pertanyaan|safe }}</div>
+        <hr>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <label>
+                <input type="radio" name="jawaban" value="A" onchange="autoSaveAnswer(this.value)" {% if jawaban_user and jawaban_user.jawaban == "A" %}checked{% endif %}> A. {{ soal.pilihan_a|safe }}
+            </label>
+
+            <label>
+                <input type="radio" name="jawaban" value="B" onchange="autoSaveAnswer(this.value)" {% if jawaban_user and jawaban_user.jawaban == "B" %}checked{% endif %}> B. {{ soal.pilihan_b|safe }}
+            </label>
+
+            <label>
+                <input type="radio" name="jawaban" value="C" onchange="autoSaveAnswer(this.value)" {% if jawaban_user and jawaban_user.jawaban == "C" %}checked{% endif %}> C. {{ soal.pilihan_c|safe }}
+            </label>
+
+            <label>
+                <input type="radio" name="jawaban" value="D" onchange="autoSaveAnswer(this.value)" {% if jawaban_user and jawaban_user.jawaban == "D" %}checked{% endif %}> D. {{ soal.pilihan_d|safe }}
+            </label>
+
+            <label>
+                <input type="radio" name="jawaban" value="E" onchange="autoSaveAnswer(this.value)" {% if jawaban_user and jawaban_user.jawaban == "E" %}checked{% endif %}> E. {{ soal.pilihan_e|safe }}
+            </label>
+
+            <br>
+
+            <div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:space-between;">
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                    {% if prev_soal_id %}
+                        <a href="{% url 'tampil_soal' prev_soal_id %}"><button type="button">← Sebelumnya</button></a>
+                    {% else %}
+                        <div></div>
+                    {% endif %}
+                </div>
+
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                    {% if has_next_step %}
+                        {% if next_soal_id %}
+                            <button type="submit" name="action" value="next">Berikutnya →</button>
+                        {% else %}
+                            <button type="submit" name="action" value="next" style="background: linear-gradient(135deg, #6c63ff, #00d4aa);">
+                                ⏭ Lanjut: {{ next_subtest.nama }} →
+                            </button>
+                        {% endif %}
+                    {% else %}
+                        <button type="submit" name="action" value="next" style="background:#198754;" onclick="return confirmSelesai();">🏁 Selesai Ujian</button>
+                    {% endif %}
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+let waktu = {{ sisa_waktu }};
+let formAutoSubmit = false;
+
+function jalankanTimer(){
+    let menit = Math.floor(waktu / 60);
+    let detik = waktu % 60;
+    let timerEl = document.getElementById("timer");
+
+    timerEl.innerHTML = "⏱ " + menit + ":" + (detik < 10 ? "0" : "") + detik;
+
+    // Warna merah jika sisa < 1 menit
+    if (waktu <= 60) {
+        timerEl.style.background = "rgba(255,50,50,0.25)";
+        timerEl.style.color = "#ff4444";
+    }
+
+    if (waktu <= 0 && !formAutoSubmit) {
+        formAutoSubmit = true;
+        // Auto-submit ke soal berikutnya / selesai ujian
+        let btn = document.querySelector('button[name="action"][value="next"]');
+        if (btn) {
+            btn.click();
+        } else {
+            window.location.href = "{% url 'selesai_ujian' %}";
+        }
+        return;
+    }
+
+    waktu--;
+}
+
+function autoSaveAnswer(val) {
+    var csrfElem = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfElem) return;
+    var formData = new FormData();
+    formData.append('jawaban', val);
+    formData.append('action', 'ajax_save');
+    formData.append('csrfmiddlewaretoken', csrfElem.value);
+
+    fetch(window.location.href, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    }).then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data && data.status === 'ok') {
+            var activeBadge = document.querySelector('.nomor.aktif');
+            if (activeBadge) {
+                activeBadge.classList.add('selesai');
+            }
+        } else if (data && data.status === 'time_up') {
+            alert("Waktu ujian Anda telah habis di Server!");
+            formAutoSubmit = true;
+            let btn = document.querySelector('button[name="action"][value="next"]');
+            if (btn) btn.click();
+            else window.location.href = "{% url 'selesai_ujian' %}";
+        }
+    }).catch(function(err) {
+        console.log('Autosave error:', err);
+    });
+}
+
+setInterval(jalankanTimer, 1000);
+
+{% if sistem_setting.anti_cheat_aktif %}
+// ============================================
+// ANTI-CHEAT MODE (Keamanan Ujian Ketat)
+// ============================================
+
+// Gunakan _v2 pada session storage agar reset dari testing sebelumnya
+if (!sessionStorage.getItem('anticheat_warning_v2_{{ soal.subtest.paket.id|default:"0" }}')) {
+    alert("Perhatian: Keamanan ketat ujian AKTIF. Anda dilarang mengcopy, klik kanan, pindah tab, atau cursor keluar dari frame aplikasi.");
+    sessionStorage.setItem('anticheat_warning_v2_{{ soal.subtest.paket.id|default:"0" }}', 'true');
+}
+
+
+let isFinishing = false;
+let isNavigating = false;
+
+window.addEventListener('beforeunload', function() {
+    isNavigating = true;
+});
+window.addEventListener('pagehide', function() {
+    isNavigating = true;
+});
+
+let cheatCount = parseInt(sessionStorage.getItem('anticheat_count_v2_{{ soal.subtest.paket.id|default:"0" }}') || '0');
+
+function recordCheat(reason) {
+    if (isFinishing || isNavigating) return;
+    if (cheatCount >= 3) {
+        return; // Sudah mencapai batas 3, sisa ujian tanpa pop-up
+    }
+
+    cheatCount++;
+    sessionStorage.setItem('anticheat_count_v2_{{ soal.subtest.paket.id|default:"0" }}', cheatCount);
+    
+    if (cheatCount === 3) {
+        // Tembak AJAX ke server
+        var csrfElem = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfElem) {
+            var formData = new FormData();
+            formData.append('action', 'ajax_cheat_flag');
+            formData.append('csrfmiddlewaretoken', csrfElem.value);
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                body: formData
+            }).catch(err => console.log(err));
+        }
+        alert("🚨 PELANGGARAN BERAT 🚨\nAlasan: " + reason + "\n\nAnda telah melanggar 3 kali! HASIL UJIAN ANDA SEKARANG DITANDAI 'CURANG'.\nAnda tidak akan diberi peringatan lagi dan dapat menyelesaikan ujian, namun hal ini telah dicatat sistem.");
+    } else {
+        alert("⚠️ Peringatan Pelanggaran! (Ke-" + cheatCount + " dari 3)\nAlasan: " + reason + "\nDilarang curang selama ujian!");
+    }
+}
+
+// 1. Blokir Klik Kanan
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    recordCheat("Klik Kanan");
+});
+
+function confirmSelesai() {
+    if (formAutoSubmit) {
+        isFinishing = true;
+        return true;
+    }
+    isFinishing = true;
+    let ans = confirm("PENTING: Apakah Anda yakin ingin mengakhiri ujian dan menyimpan hasilnya? Setelah ini Anda tidak bisa mengulangi paket ini.");
+    if (!ans) {
+        setTimeout(function() { 
+            isFinishing = false; 
+            isNavigating = false; // Reset just in case
+        }, 1000);
+    }
+    return ans;
+}
+
+
+// 2. Blokir Copy/Cut/Paste
+document.body.style.userSelect = "none";
+document.body.style.webkitUserSelect = "none";
+document.body.style.webkitTouchCallout = "none";
+document.addEventListener('copy', function(e) { e.preventDefault(); recordCheat("Mencoba Copy Teks"); });
+document.addEventListener('cut', function(e) { e.preventDefault(); recordCheat("Mencoba Cut Teks"); });
+document.addEventListener('paste', function(e) { e.preventDefault(); recordCheat("Mencoba Paste Teks"); });
+
+// 3. Blokir F12 / DevTools
+document.onkeydown = function(e) {
+    if (e.keyCode === 123 || 
+       (e.ctrlKey && e.shiftKey && e.keyCode === 73) || 
+       (e.ctrlKey && e.shiftKey && e.keyCode === 67) || 
+       (e.ctrlKey && e.shiftKey && e.keyCode === 74) || 
+       (e.ctrlKey && e.keyCode === 85) ||
+       (e.ctrlKey && e.keyCode === 67)) {
+        e.preventDefault();
+        recordCheat("Mencoba Buka Developer Tools / Source");
+        return false;
+    }
+};
+
+// 4. Deteksi Pindah Tab (dengan penundaan agar klik nomor soal yang memuat halaman baru mati sebelum ini dieksekusi)
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') {
+        setTimeout(function() {
+            if (!isNavigating && !isFinishing) {
+                recordCheat("Meninggalkan Tab Ujian / Berpindah Aplikasi");
+            }
+        }, 500);
+    }
+});
+
+// 5. Deteksi Mouse Keluar Area
+document.addEventListener('mouseleave', function(e) {
+    if (e.clientY <= 0 || e.clientX <= 0 || (e.clientX >= window.innerWidth || e.clientY >= window.innerHeight)) {
+        recordCheat("Kursor Keluar Dari Area Layar Aplikasi");
+    }
+});
+{% endif %}
+</script>
+
+{% endblock %}
+
